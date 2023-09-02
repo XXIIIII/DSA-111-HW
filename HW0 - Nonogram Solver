@@ -1,0 +1,404 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <assert.h>
+#define max 25
+void initialize_board(char board[max][max], int N, int M){ // not going to use cell has 1
+    for(int i = 0; i < max; i++){
+        for (int j = 0; j < max; j++){
+            if (j >= M || i >= N){
+                board[i][j] = '1';
+            }
+        }
+    }
+
+}
+bool check_filled(char board[max][max]){
+    for(int i = 0; i < max; i++){
+        for (int j = 0; j < max; j++){
+            if (board[i][j] == '0'){
+                //printf("not yet filled\n");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool check_valid(char board[max][max], int N, int M, int clue1[30], int clue2[30][30]){
+   // printf("checking");
+    for(int i = 0; i < N; i++){
+        int count1 = 0;
+        int count2[30]= {0};
+        int k = 0;
+        for (int j = 0; j < M; j++){
+            //printf("j is %d\n",j);
+            if (board[i][j] == 'o'){
+                if (count1 == 0){
+                    //printf("count + 1\n");
+                    count1++;
+                    count2[k]++;
+                }
+                else{
+                    if (j != 0 && board[i][j-1] != 'o'){
+                        //printf("count ++ 1\n");
+                        count1++;
+                        k++;
+                        count2[k]++;
+                    }
+                    if (j != 0 && board[i][j-1] == 'o'){
+                            //printf("count +++ 1\n");
+                            count2[k]++;
+                    }
+                }
+            }
+        }
+        //printf("count1 = %d\n",count1);
+        for (int i = 0; i < 30; i++){
+            //printf("count2[%d] = %d\n", i, count2[i]);
+        }
+        if (count1 == clue1[i]){
+                for (int h = 0; h < 30; h++){
+                    if (clue2[i][h] != count2[h]){
+                        return false;
+                    }
+                }
+            }
+        else{
+            return false;
+            }
+    }
+    //printf("finish checking i\n");
+    for(int j = 0; j < M; j++){
+        int count1 = 0;
+        int count2[30]= {0};
+        int k = 0;
+        for (int i = 0; i < N; i++){
+            //printf("i is %d\n",i);
+            if (board[i][j] == 'o'){
+                if (count1 == 0){
+//                    printf("count + 1\n");
+                    count1++;
+                    count2[k]++;
+                }
+                else{
+                    if (i != 0 && board[i-1][j] != 'o'){
+//                        printf("count ++ 1\n");
+                        count1++;
+                        k++;
+                        count2[k]++;
+                    }
+                    if (i != 0 && board[i-1][j] == 'o'){
+                            count2[k]++;
+//                            printf("count +++ 1\n");
+                    }
+                }
+            }
+        }
+//        printf("count1 = %d\n",count1);
+        for (int i = 0; i < 30; i++){
+//            printf("count2[%d] = %d\n", i, count2[i]);
+        }
+        if (count1 == clue1[j+N]){
+                for (int h = 0; h < 30; h++){
+                    if (clue2[j+N][h] != count2[h]){
+                        return false;
+                    }
+                }
+            }
+        else{
+            return false;
+            }
+    }
+    return true;
+
+}
+
+char *find_empty(char board[max][max], int N, int M){
+    for (int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+            if (board[i][j] == '0'){
+                return (&board[i][j]);
+            }
+        }
+    }
+    return NULL;
+}
+
+int check_filled_row(char board[max][max], int M){
+    int count = 0;
+   // printf("checking row\n");
+    for(int i = 0; i < max; i++){
+        for (int j = 0; j < max; j++){
+            if (board[i][j] != '0' && board[i][j] != '1'){
+                count++;
+            }
+        }
+    }
+    if (count >= M && count % M == 0){
+     //   printf("there is M\n");
+        return count / M;
+    }
+    else{
+       // printf("returning 0\n");
+        return 0;
+    }
+
+}
+int check_filled_column(char board[max][max], int N){
+    int count = 0;
+    bool break_now = false;
+    //printf("checking column\n");
+    for(int j = 0; j < max; j++){
+        for (int i = 0; i < max; i++){
+      //      printf("count");
+            if (board[i][j] != '0' && board[i][j] != '1'){
+                count++;
+        //        printf("board[%d][%d] count + 1\n",i, j);
+            }
+            if (board[i][j] == '0'){
+                break_now = true;
+                break;
+            }
+
+            }
+        if(break_now)
+            break;
+        }
+
+
+    if (count >= N && count % N == 0){
+        //printf("there is N\n");
+        return count / N;
+    }
+    else{
+        //printf("returning 0\n");
+        return 0;
+    }
+
+}
+
+
+bool check_row_valid(char board[max][max], int row_numbers, int M, int clue1[30], int clue2[30][30]){
+    for(int i = 0; i < row_numbers; i++){
+        int count1 = 0;
+        int count2[30]= {0};
+        int k = 0;
+        for (int j = 0; j < M; j++){
+            //printf("j is %d\n",j);
+            if (board[i][j] == 'o'){
+                if (count1 == 0){
+                    //printf("count + 1\n");
+                    count1++;
+                    count2[k]++;
+                }
+                else{
+                    if (j != 0 && board[i][j-1] != 'o'){
+                        //printf("count ++ 1\n");
+                        count1++;
+                        k++;
+                        count2[k]++;
+                    }
+                    if (j != 0 && board[i][j-1] == 'o'){
+                            //printf("count +++ 1\n");
+                            count2[k]++;
+                    }
+                }
+            }
+        }
+        //printf("count1 = %d\n",count1);
+        //for (int i = 0; i < 30; i++){
+          //  printf("count2[%d] = %d\n", i, count2[i]);
+        //}
+        if (count1 == clue1[i]){
+                for (int h = 0; h < 30; h++){
+                    if (clue2[i][h] != count2[h]){
+                        return false;
+         //               printf("row : clue 2 wrong");
+                    }
+                }
+            }
+        else{
+           // printf("row : clue 2 wrong");
+            return false;
+            }
+    }
+    return true;
+}
+
+bool check_column_valid(char board[max][max], int column_numbers, int N, int clue1[30], int clue2[30][30]){
+    for(int j = 0; j < column_numbers; j++){
+        int count1 = 0;
+        int count2[30]= {0};
+        int k = 0;
+        for (int i = 0; i < N; i++){
+           // printf("i is %d\n",i);
+            if (board[i][j] == 'o'){
+                if (count1 == 0){
+//                    printf("count + 1\n");
+                    count1++;
+                    count2[k]++;
+                }
+                else{
+                    if (i != 0 && board[i-1][j] != 'o'){
+//                        printf("count ++ 1\n");
+                        count1++;
+                        k++;
+                        count2[k]++;
+                    }
+                    if (i != 0 && board[i-1][j] == 'o'){
+                            count2[k]++;
+//                            printf("count +++ 1\n");
+                    }
+                }
+            }
+        }
+//        printf("count1 = %d\n",count1);
+        for (int i = 0; i < 30; i++){
+//            printf("count2[%d] = %d\n", i, count2[i]);
+        }
+        if (count1 == clue1[j+N]){
+                for (int h = 0; h < 30; h++){
+                    if (clue2[j+N][h] != count2[h]){
+                        return false;
+                    }
+                }
+            }
+        else{
+            return false;
+            }
+    }
+    return true;
+}
+
+bool Recur(char board[max][max], int N, int M, int clue1[30], int clue2[30][30]){
+    char *cell;
+    bool succeed;
+    if (check_filled(board)){
+        if (check_valid(board,N,M,clue1,clue2)){
+            for(int i = 0; i < N; i++){
+                for(int j = 0; j < M; j++){
+                    printf("%c",board[i][j]);
+                }
+                printf("\n");
+            } //print board
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    else {if(check_filled_row(board, M) != 0){
+            int row_numbers = check_filled_row(board, M);
+            //printf("Row numbers = %d\n",row_numbers);
+            if (check_row_valid(board, row_numbers, M, clue1, clue2) == false){
+
+              //  printf("row wrong\n");
+                return false;
+            }
+        }
+        if(check_filled_column(board, N) != 0){
+            int column_numbers = check_filled_column(board, N);
+            //printf("Column numbers = %d\n",column_numbers);
+            if (check_column_valid(board, column_numbers, N, clue1, clue2) == false){
+
+              //  printf("column wrong\n");
+                return false;
+            }
+        }
+
+
+    //else if(check_filled_column()){
+      //      if (check_column_valid==false){
+        //        return false;
+          //  }
+        //}
+
+            cell = find_empty(board, N, M);
+            //printf("%p\n",cell);
+            assert(cell != NULL);
+            *cell = 'o'; //paint cell black
+            //printf("painting black\n");
+            //printf("=================\n");
+            for(int i = 0; i < N; i++){
+                    for(int j = 0; j < M; j++){
+              //          printf("%c",board[i][j]);
+                    }
+                //    printf("\n");
+                } //print board
+
+
+            succeed = Recur(board, N, M, clue1, clue2);
+            if (succeed){
+                return true;
+            }
+            *cell = '_'; //paint cell white
+            //printf("painting white\n");
+    //       check board in terminal
+            //printf("=================\n");
+            for(int i = 0; i < N; i++){
+                    for(int j = 0; j < M; j++){
+              //          printf("%c",board[i][j]);
+                    }
+                   // printf("\n");
+                } //print board
+
+            succeed = Recur(board, N, M, clue1, clue2);
+            if (succeed){
+                return true;
+            }
+            *cell = '0';
+            //printf("emptying\n");
+            //printf("=================\n");
+            for(int i = 0; i < N; i++){
+                    for(int j = 0; j < M; j++){
+              //          printf("%c",board[i][j]);
+                    }
+                //    printf("\n");
+                } //print board
+            return false;
+
+
+    }
+}
+
+int main(){
+    int N, M;
+    int clue1[30] = {0};
+    int clue2[30][30] = {0};
+    char board[max][max];
+    for(int i = 0; i < max; i++){  // empty cell has 0
+        for(int j = 0; j < max; j++){
+            board[i][j] = '0';
+        }
+    }
+
+
+    scanf("%d%d", &N, &M);
+    initialize_board(board, N, M);
+
+
+    for (int i = 0; i < N + M; i++){
+        scanf("%d",&clue1[i]);
+        for (int j = 0; j < clue1[i]; j++){
+            scanf("%d",&clue2[i][j]);
+        }
+    }
+
+    for (int i = 0; i < 30; i++){
+        //printf("%d ",clue1[i]);
+        for (int j = 0; j < 30; j++){
+            //printf("%d ",clue2[i][j]);
+        }
+        //printf("\n");
+    } // finish scanning clues
+
+    for (int i = 0; i < max; i++){ //check if initialize correctly
+        for (int j = 0; j < max; j++){
+            //printf("%c ",board[i][j]);
+        }
+        //printf("\n");
+    }
+
+
+    Recur(board, N, M, clue1, clue2);
+
+}
