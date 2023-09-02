@@ -1,0 +1,213 @@
+#include<stdio.h>
+#include<assert.h>
+#include<stdbool.h>
+#include<string.h>
+#define LENGTH 260
+
+void convert_to_array (char string[LENGTH],int array[LENGTH]){
+    int length = strlen(string);
+    int count = LENGTH - length;
+    for(int i = 0; i < length; i++){
+        array[count] = (int)string[i] - 48;
+        count++;
+    }
+
+}
+
+int counter (int array[LENGTH]){
+    int count = 0;
+    while (array[count] == 0)
+        count++;
+    return LENGTH - count;
+}
+
+int *compare (int *a, int *b){
+    int alength = counter(a);
+    int blength = counter(b);
+    if (alength > blength)
+        return a;
+    else {
+        if (blength > alength)
+            return b;
+        else{
+            for (int i = LENGTH - alength; i < LENGTH; i++){
+                if ( a[i] > b[i]){
+                    return a;
+                }
+                if (b[i] > a[i])
+                    return b;
+            }
+        }
+    }
+    return NULL;
+}
+
+bool check_notzero(int *a){
+    for (int i = 0; i < LENGTH; i++){
+        if (a[i] != 0)
+            return true;
+    }
+    return false;
+}
+
+void divisor(int *a){
+    int divided[LENGTH] = {0};
+    for(int i = 0; i < LENGTH; i++){
+        if (a[i] >= 2 || a[i] == 0){
+            if (a[i] % 2 == 0)
+                divided[i] = a[i] / 2;
+            else{
+                divided[i] = a[i] / 2;
+                a[i+1] += 10;
+            }
+
+        }
+        else{
+            a[i+1] += 10;
+            divided[i] = 0;
+        }
+    }
+    for (int i = 0; i < LENGTH; i++)
+        a[i] = divided[i];
+
+
+
+
+
+}
+
+void subtractor(int a[],int b[]){   //max,min
+    int *max = a;
+    int *min = b;
+    int newmax[LENGTH] = {0};
+    int count;
+    for (int i = LENGTH - 1; i >=  0; i--){
+        if (max[i] < min[i]){
+            max[i] += 10;
+            count = 1;
+            while (max[i - count] == 0){
+                count += 1;
+
+            }
+            max[i - count] -= 1;
+            count -= 1;
+            while (count > 0){
+                max[i - count] += 9;
+                count -= 1;
+            }
+        }
+        newmax[i] =  max[i] - min[i];
+    }
+    for (int i = 0; i < LENGTH; i++)
+        max[i] = newmax[i];
+
+}
+
+void multiplier(int a[],int k){
+    if (k != 0){
+        int *ptr1 = a;
+        int anew[LENGTH] = {0};
+        int *ptr2 = anew;
+        for (int j = 0; j < k; j++){
+            bool add_one = false;
+            for (int i = LENGTH - 1; i >= 0; i--){
+                ptr2[i] = 2 * ptr1[i];
+                if (add_one){
+                    ptr2[i] += 1;
+
+                    add_one = false;
+                }
+                if (ptr2[i] >= 10){
+                    add_one = true;
+
+                    ptr2[i] = ptr2[i] % 10;
+                }
+            }
+            int *temp = ptr1;
+            ptr1 = ptr2;
+            ptr2 = temp;
+            for (int i = 0; i < LENGTH; i++){
+                ptr2[i] = 0;
+            }
+
+
+        }
+
+        for(int i = 0; i < LENGTH; i++)
+            a[i] = ptr1[i];
+    }
+
+}
+
+
+
+
+int main(){
+    int a[LENGTH]={0}, b[LENGTH]={0};
+    char string1[LENGTH], string2[LENGTH];
+    int k = 0;
+    scanf("%s",string1);
+    scanf("%s",string2);
+    convert_to_array(string1,a);
+    convert_to_array(string2,b);
+
+
+
+    int *m = compare(a, b);
+    if (m == NULL){
+        printf("%s",string1);
+    }
+    else{
+        int *n;
+        if (m == a)
+            n = b;
+        else
+            n = a;  //finish setting m and n
+
+        while (check_notzero(m) && check_notzero(n)){
+            if (n[LENGTH-1] % 2 == 0 && m[LENGTH-1] % 2 == 0){
+                    k++;
+                    divisor(n);
+                    divisor(m);
+
+            }
+            else{
+                if (n[LENGTH-1] % 2 == 0){
+                    divisor(n);
+
+                }
+                else {
+                    if (m[LENGTH-1] % 2 == 0){
+                        divisor(m);
+
+                    }
+                }
+
+            }
+
+
+            if (n == compare(m,n)){
+                int *temp = n;
+                n = m;
+                m = temp;
+            }
+            subtractor(m,n);
+
+        }
+
+        multiplier(n,k);
+
+
+        int ans_length = counter(n);
+        for (int i = LENGTH - ans_length; i < LENGTH; i++)
+            printf("%d",n[i]);
+
+
+    }
+
+
+
+
+
+
+}
