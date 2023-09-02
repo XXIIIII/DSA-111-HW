@@ -1,0 +1,463 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<stdbool.h>
+#include<math.h>
+#include <string.h>
+#define max 200001
+//#define max 201
+
+int counts[max];
+typedef struct listnode
+{
+    long long health;
+    int index;
+} heap_node;
+
+typedef struct arraystruct
+{
+    int parent;
+    int height;
+    int size;
+    bool dead;
+    heap_node *health_heap;//pointer of heapnode array
+    int heap_size;
+    int heap_array_size;
+    long long health;
+    long long attack;
+    long long total_attack;
+    struct arraystruct **set_element; //pointer of an array of pointer of knights
+    int set_array_size;
+    int set_size;
+    int count;
+    int total_count;
+    int die_value;
+
+} knight;
+
+struct arraystruct knight_array[max];
+
+heap_node *genNode(long long health, int i, int M)
+{
+    heap_node *node = (heap_node *)malloc(M * sizeof(heap_node));
+    assert(node != NULL);
+    node[0].health = health;
+    node[0].index = i;
+    return node;
+}
+
+int find_set(int x){
+    if(x != knight_array[x].parent){
+        knight_array[x].parent = find_set(knight_array[x].parent);
+    }
+    return knight_array[x].parent;
+}
+
+void heapify(heap_node *array, int heap_size, int cursor){
+    int smallest = cursor;
+    int left, right;
+    long long temp;
+    int temp2;
+    while(true){
+       // printf("doing2\n");
+        left = 2 * cursor + 1;
+        right = 2 * cursor + 2;
+        if(left > heap_size)
+            break;
+        if(left < heap_size && array[left].health < array[cursor].health){
+            smallest = left;
+//            printf("left smaller, left is %d\n",array[left].health);
+            //printf("smallest is left %d\n", ptr[smallest]->cost);
+        }
+        if(right < heap_size && array[right].health < array[smallest].health){
+            smallest = right;
+           // printf("smallest is right %d\n", ptr[smallest]->cost);
+        }
+        if(smallest == cursor)
+            break;
+        else{
+            temp = array[cursor].health;
+            array[cursor].health = array[smallest].health;
+            array[smallest].health = temp;
+            temp2 = array[cursor].index;
+            array[cursor].index = array[smallest].index;
+            array[smallest].index = temp2;
+            cursor = smallest;
+          //  printf("doing3\n");
+        }
+
+    }
+
+}
+heap_node *remove_heapnode(heap_node *array, int ks){
+    int heap_size = knight_array[ks].heap_size;
+    long long last_health = array[heap_size-1].health;
+    int last_index = array[heap_size-1].index;
+    array[0].health = last_health;
+    array[0].index = last_index;
+
+    heap_size = heap_size - 1;
+    knight_array[ks].heap_size = knight_array[ks].heap_size - 1;
+    heapify(array, heap_size, 0);
+}
+
+void deduct_health(long long attack, heap_node *root, int ks, int ka){
+//    printf("deducting\n");
+//    printf("before deduct = %d\n",root[0].health);
+
+    root[0].health = root[0].health - attack;
+//    printf("after deduct = %d\n",root[0].health);
+    //if someone will die
+    while (root[0].health <= knight_array[ks].die_value){
+        knight_array[root[0].index].dead = true;
+//        printf("%d died\n",root[0].index);
+//        printf("root dying \n");
+        //count attack times
+        counts[root[0].index] = knight_array[find_set(root[0].index)].total_count - knight_array[root[0].index].count;
+        //deduct attack of set
+        knight_array[ks].total_attack = knight_array[ks].total_attack - knight_array[root[0].index].attack;
+        //delete heap node
+        if(knight_array[ks].heap_size == 1){
+            knight_array[ks].heap_size = knight_array[ks].heap_size - 1;
+        }
+        else{
+            remove_heapnode(root, ks);
+        }
+//        printf("%d is new root\n",root[0].index);
+        if(knight_array[ks].heap_size != 0){
+//            printf("here\n");
+            root[0].health = root[0].health - attack;
+
+        }
+        else
+            break;
+    }//should die all died
+    if(knight_array[ks].heap_size != 0)
+        root[0].health = root[0].health + attack;
+    if(knight_array[ka].heap_size > knight_array[ks].heap_size){ //big attack small
+        for(int i = 0; i < knight_array[ks].heap_size; i++){
+            root[i].health = root[i].health - (attack - knight_array[ka].die_value + knight_array[ks].die_value);
+        }
+        if (knight_array[ka].size <= knight_array[ks].size){
+            knight_array[ks].die_value = knight_array[ka].die_value;
+        }
+
+
+    }
+    else{ //small attack big
+        for(int i = 0; i < knight_array[ka].heap_size; i++){
+            knight_array[ka].health_heap[i].health = knight_array[ka].health_heap[i].health + (attack - knight_array[ka].die_value + knight_array[ks].die_value);
+        }
+        if (knight_array[ka].size > knight_array[ks].size){
+            knight_array[ka].die_value = attack + knight_array[ks].die_value;
+        }
+        else{
+            knight_array[ks].die_value = attack + knight_array[ks].die_value;
+        }
+    }
+
+}
+
+void heapify2(heap_node *array, int heap_size, int i){
+    int parent = (i - 1)/2;
+    long long temp;
+    int temp2;
+//    printf("here2\n");
+//    printf("parent is %d\n",parent);
+//    printf("i is %d\n",i);
+    if (parent >= 0 && parent != i){
+//        printf("parent is %d\n",parent);
+//        printf("parent id is %d\n",array[parent].index);
+//        printf("i id is %d\n",array[i].index);
+        if (array[parent].health > array[i].health){
+//            printf("heapify\n");
+            temp = array[parent].health;
+            array[parent].health = array[i].health;
+            array[i].health = temp;
+            temp2 = array[parent].index;
+            array[parent].index = array[i].index;
+            array[i].index = temp2;
+            heapify2(array, heap_size, parent);
+    }
+    }
+
+}
+void insert_node(int inserted, heap_node *inserting_node){
+//    printf("inserting\n");
+    knight_array[inserted].heap_size++;
+    int heap_size = knight_array[inserted].heap_size;
+    knight_array[inserted].health_heap[heap_size-1].health = inserting_node->health;
+    knight_array[inserted].health_heap[heap_size-1].index = inserting_node->index;
+//    printf("here\n");
+//    printf("heap size is %d\n",heap_size);
+//    for(int i = 0; i < heap_size; i++)
+//        printf("%d  ",knight_array[inserted].health_heap[i].index);
+//    printf("\n");
+    heapify2(knight_array[inserted].health_heap, heap_size, heap_size-1);
+
+}
+
+void union_health_heap(int ka, int ks){
+//    printf("doing union\n");
+//    printf("ka heap size is %d\n",knight_array[ka].heap_size);
+//    printf("ks heap size is %d\n",knight_array[ks].heap_size);
+    if(knight_array[ka].heap_size > knight_array[ks].heap_size){
+//        printf("doing 1\n");
+        if(knight_array[ka].heap_array_size < knight_array[ka].heap_size + knight_array[ks].heap_size){
+//            printf("realloc\n");
+//            printf("%d\n",knight_array[ka].heap_array_size);
+//            printf("%d\n",knight_array[ka].heap_array_size + knight_array[ks].heap_size);
+            knight_array[ka].health_heap = (heap_node *)realloc(knight_array[ka].health_heap, sizeof(heap_node)*((knight_array[ka].heap_size + knight_array[ks].heap_size)*2));
+            knight_array[ka].heap_array_size = (knight_array[ka].heap_size + knight_array[ks].heap_size)*2;
+        }
+
+        for(int i = 0; i < knight_array[ks].heap_size; i++){
+            insert_node(ka, &knight_array[ks].health_heap[i]);
+        }
+        free(knight_array[ks].health_heap);
+        if (knight_array[ka].size < knight_array[ks].size){
+            knight_array[ks].health_heap = knight_array[ka].health_heap;
+            knight_array[ks].heap_size = knight_array[ka].heap_size;
+            knight_array[ks].heap_array_size = knight_array[ka].heap_array_size;
+
+
+        }
+
+
+    }
+    else{
+//        printf("doing 2\n");
+        if(knight_array[ks].heap_array_size < knight_array[ka].heap_size + knight_array[ks].heap_size){
+//            printf("realloc\n");
+            knight_array[ks].health_heap = (heap_node *)realloc(knight_array[ks].health_heap, sizeof(heap_node)*((knight_array[ka].heap_size + knight_array[ks].heap_size)*2));
+            knight_array[ks].heap_array_size = (knight_array[ka].heap_size + knight_array[ks].heap_size)*2;
+        }
+
+        for(int i = 0; i < knight_array[ka].heap_size; i++){
+            insert_node(ks, &knight_array[ka].health_heap[i]);
+        }
+        free(knight_array[ka].health_heap);
+        if (knight_array[ka].size > knight_array[ks].size){
+            knight_array[ka].health_heap = knight_array[ks].health_heap;
+            knight_array[ka].heap_size = knight_array[ks].heap_size;
+            knight_array[ka].heap_array_size = knight_array[ks].heap_array_size;
+
+
+        }
+    }
+
+
+
+}
+
+void link(int ka, int ks){
+//    printf("ka is %d\n",ka);
+//    printf("ks is %d\n",ks);
+    if (ka != ks){
+
+    //deduct health
+    int count = 0;
+    deduct_health(knight_array[ka].total_attack, knight_array[ks].health_heap, ks, ka);
+    if (knight_array[ka].size > knight_array[ks].size){//attack higher than attacked, attacked add into attack set
+        knight_array[ka].total_count++;
+
+        for(int i = 0; i < knight_array[ks].set_size; i++){
+            knight_array[ks].set_element[i]->count = knight_array[ka].total_count - knight_array[ks].total_count + knight_array[ks].set_element[i]->count;
+        }
+        if(knight_array[ka].set_array_size < knight_array[ka].set_size + knight_array[ks].set_size){
+//            printf("realloc set\n");
+            knight_array[ka].set_element = (knight **)realloc(knight_array[ka].set_element, sizeof(knight*)*((knight_array[ka].set_size + knight_array[ks].set_size)*2));
+
+
+//            printf("%d\n",knight_array[ka].heap_array_size);
+//            printf("%d\n",knight_array[ka].heap_array_size + knight_array[ks].heap_size);
+
+            knight_array[ka].set_array_size = (knight_array[ka].set_size + knight_array[ks].set_size)*2;
+
+
+        }
+        for(int i = knight_array[ka].set_size; i < knight_array[ka].set_size + knight_array[ks].set_size; i++){
+                knight_array[ka].set_element[i] = knight_array[ks].set_element[count];
+                count++;
+        }
+        free(knight_array[ks].set_element);
+        knight_array[ka].set_size += knight_array[ks].set_size;
+        knight_array[ks].parent = ka;
+        knight_array[ka].size += knight_array[ks].size;
+        //union attack
+        knight_array[ka].total_attack = knight_array[ka].total_attack + knight_array[ks].total_attack; //add the child's attack value to the root
+
+//        printf("doing 1\n");
+    }
+    else{
+        for(int i = 0; i < knight_array[ka].set_size; i++){
+            knight_array[ka].set_element[i]->count = knight_array[ka].set_element[i]->count - 1 + knight_array[ks].total_count - knight_array[ka].total_count ;
+        }
+        if(knight_array[ks].set_array_size < knight_array[ka].set_size + knight_array[ks].set_size){
+//            printf("realloc set2\n");
+            knight_array[ks].set_element = (knight **)realloc(knight_array[ks].set_element, sizeof(knight *)*((knight_array[ka].set_size + knight_array[ks].set_size)*2));
+
+
+//            printf("%d\n",knight_array[ka].heap_array_size);
+//            printf("%d\n",knight_array[ka].heap_array_size + knight_array[ks].heap_size);
+
+            knight_array[ks].set_array_size = (knight_array[ka].set_size + knight_array[ks].set_size)*2;
+
+
+        }
+        for(int i = knight_array[ks].set_size; i < knight_array[ka].set_size + knight_array[ks].set_size; i++){
+                knight_array[ks].set_element[i] = knight_array[ka].set_element[count];
+                count++;
+        }
+        free(knight_array[ka].set_element);
+        knight_array[ks].set_size += knight_array[ka].set_size;
+        knight_array[ka].parent = ks;
+        knight_array[ks].size += knight_array[ka].size;
+//        printf("doing 2\n");
+        //union attack
+        knight_array[ks].total_attack = knight_array[ks].total_attack + knight_array[ka].total_attack;
+        if(knight_array[ka].height == knight_array[ks].height){
+            knight_array[ks].height++;
+           // printf("3\n");
+        }
+    }
+    //union health heap
+        union_health_heap(ka, ks);
+    }
+
+}
+
+
+void Union(int ka, int ks){
+    link(find_set(ka), find_set(ks));
+}
+
+int main(){
+    int n, m;
+    int ka, ks;
+    heap_node *ptr;
+
+    scanf("%d%d", &n ,&m);
+    for(int i = 1; i <= n; i++){
+        scanf("%lld",&knight_array[i].health);
+        ptr = genNode(knight_array[i].health, i, 2);
+        knight_array[i].health_heap = ptr;
+        knight_array[i].parent = i;
+        knight_array[i].height = 0;
+        knight_array[i].size = 1;
+        knight_array[i].dead = false;
+        knight_array[i].heap_size = 1;
+        knight_array[i].heap_array_size = 2;
+        knight_array[i].count = 0;
+        knight_array[i].total_count = 0;
+        knight_array[i].set_element = (knight **)malloc(sizeof(knight *)*2);
+        knight_array[i].set_element[0] = &knight_array[i];
+        knight_array[i].set_array_size = 2;
+        knight_array[i].set_size = 1;
+        knight_array[i].die_value = 0;
+
+    }
+    for(int i = 1; i <= n; i++){
+        scanf("%lld",&knight_array[i].attack);
+        knight_array[i].total_attack = knight_array[i].attack;
+    }
+
+    for(int i = 0; i < m; i++){
+        scanf("%d%d", &ka, &ks);
+
+        if (knight_array[ka].dead == false && knight_array[ks].dead == false){
+
+            Union(ka, ks);
+        }
+//        printf("\n");
+//        for(int i = 1; i <= n; i++){
+//        printf("%lld  ",knight_array[i].total_attack);
+//        }
+//        printf("\n");
+//        for(int i = 0; i < knight_array[14].heap_size; i++){
+//        printf("%d  ", knight_array[14].health_heap[i].index);
+//        printf("%d  ", knight_array[14].health_heap[i].health);
+//        }
+//        printf("\n");
+//        for(int i = 1; i <= n; i++){
+//        printf("%d  ",knight_array[i].heap_size);
+//        }
+//        printf("\n count :");
+////        for(int i = 0; i < knight_array[3].set_size; i++){
+////        printf("%p  ", knight_array[3].set_element[i]);
+////        }
+////        printf("\n");
+//        for(int i = 1; i <= n; i++){
+//        printf("%d ",knight_array[i].count);
+//    }
+//        printf("\n total count: ");
+//        for(int i = 1; i <= n; i++){
+//        printf("%d ",knight_array[i].total_count);
+//
+//    }
+    }
+    for(int i = 1; i <= n; i++){
+        if(knight_array[i].dead == false){
+            counts[i] = knight_array[find_set(i)].total_count - knight_array[i].count;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+//
+//
+//    for(int i = 1; i <= n; i++){
+//        //printf("%d  ",knight_array[i].parent);
+//        printf("%lld  ",knight_array[i].total_attack);
+//    //    printf("%d  ",knight_array[i].height);
+////        printf("%d\n",knight_array[i].parent);
+//    }
+//    printf("\n");
+//    for(int i = 1; i <= n; i++){
+//        printf("%d  ",knight_array[i].heap_size);
+//    }
+//    printf("\n");
+//    for(int i = 1; i <= n; i++){
+//        //printf("%d  ",knight_array[i].parent);
+//        //printf("%lld  ",knight_array[i].heap_size);
+//        printf("%d  ",knight_array[i].size);
+////        printf("%d\n",knight_array[i].parent);
+//    }
+//    printf("\n");
+//    for(int i = 0; i < knight_array[3].heap_size; i++){
+//        printf("%d  ", knight_array[3].health_heap[i].health);
+//    }
+//    printf("\n");
+//    for(int i = 1; i <= n; i++){
+//        printf("%p ",&knight_array[i]);
+//        //printf("%lld  ",knight_array[i].heap_size);
+//        //printf("%d  ",knight_array[i].size);
+////        printf("%d\n",knight_array[i].parent);
+//    }
+//    printf("\n");
+//    for(int i = 0; i < knight_array[3].set_size; i++){
+//        printf("%p  ", knight_array[3].set_element[i]);
+//    }
+//    for(int i = 1; i <= n; i++){
+//        printf("%d ",knight_array[i].count);
+//    }
+    for(int i = 1; i <= n; i++){
+        printf("%d ",counts[i]);
+        //printf("%lld  ",knight_array[i].heap_size);
+        //printf("%d  ",knight_array[i].size);
+//        printf("%d\n",knight_array[i].parent);
+    }
+
+
+}
+
+
+
