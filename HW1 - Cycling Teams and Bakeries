@@ -1,0 +1,1653 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<stdbool.h>
+#define max 1000
+#define max_l 1000000
+typedef struct listnode{
+    bool boundary;
+    bool top_left_corner;
+    int rank;
+    int toast;
+    int d_up;
+    int d_down;
+    int d_right;
+    int d_left;
+    int zd_up;
+    int zd_down;
+    int zd_right;
+    int zd_left;
+    struct listnode *up;
+    struct listnode *down;
+    struct listnode *right;
+    struct listnode *left;
+
+} bakery;
+
+struct arrays{
+    int rank;
+    int toast;
+    bakery *pointer;
+};
+
+struct arrays2{
+    int id_1;
+    int id_2;
+    bakery *pointer;
+};
+
+struct arrays bakery_array[max][max];
+struct arrays2 array_2[max_l];
+
+bakery *genList(int rank, int toast, bakery *up, bakery *down, bakery *right, bakery *left){
+    bakery *node = (bakery *)malloc(sizeof(bakery));
+    assert(node != NULL);
+    node -> boundary = false;
+    node -> top_left_corner = false;
+    node -> rank = rank;
+    node -> toast = toast;
+    node -> d_up = 0;
+    node -> d_down = 0;
+    node -> d_right = 0;
+    node -> d_left = 0;
+    node -> zd_up = 0;
+    node -> zd_down = 0;
+    node -> zd_right = 0;
+    node -> zd_left = 0;
+    node -> up = up;
+    node -> down = down;
+    node -> right = right;
+    node -> left = left;
+    return node;
+}
+
+void create_link(bakery *current, bakery *up, bakery *down, bakery *right, bakery *left){
+    current -> up = up;
+    current -> down = down;
+    current -> right = right;
+    current -> left = left;
+}
+
+bakery *find_bakery(int rank, int m, int n){
+
+    for(int i = 0; i < n; i++){
+        for(int j = 0; j < m; j++){
+            if (rank == bakery_array[i][j].rank){
+
+                return bakery_array[i][j].pointer;
+
+                break;
+            }
+        }
+
+    }
+    return NULL;
+
+}
+
+void printlinkedlist(bakery *head)
+{
+    for(; head != NULL ; head = head -> right)
+    {
+        printf("%d ",head -> rank);
+
+    }
+    printf("\n");
+}
+
+bool not_visited(int rank, int *visited, int k){
+    for(int i = 0; i <= k; i++){
+        if(visited[i] == rank){
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bakery *find_next(bakery *current){
+    int min = 0;
+    bakery *min_ptr = NULL;
+    int distance = 0;
+    bakery *up;
+    bakery *down;
+    bakery *right;
+    bakery *left;
+    up = current -> up;
+    down = current -> down;
+    right = current -> right;
+    left = current -> left;
+
+
+    if (up != NULL){
+            min = up->rank;
+          //  printf("minup:%d\n",min);
+            min_ptr = up;
+            distance = current -> d_up;
+        }
+
+    if (down != NULL){
+            if (min == 0 ||current -> d_down < distance || (down->rank < min && current -> d_down <= distance)){
+                min = down->rank;
+             //   printf("mindown:%d\n",min);
+                distance = current -> d_down;
+                min_ptr = down;
+            }
+        }
+
+    if (right != NULL){
+            if (min == 0 || (current -> d_right < distance) ||(right->rank < min && current -> d_right <= distance)){
+                min = right->rank;
+               // printf("minright:%d\n",min);
+                distance = current -> d_right;
+                min_ptr = right;
+            }
+        }
+
+    if (left != NULL){
+            if (min == 0 || current -> d_left < distance || (left->rank < min && current -> d_left <= distance)){
+                min = left->rank;
+              //  printf("minleft:%d\n",min);
+
+                min_ptr = left;
+            }
+        }
+
+
+
+
+
+    return min_ptr;
+}
+
+
+
+int main(){
+    int n, m;
+    scanf("%d%d", &n, &m);
+
+
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            scanf("%d",&bakery_array[i][j].rank);
+        }
+    }
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            scanf("%d",&bakery_array[i][j].toast);
+        }
+    }
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            bakery_array[i][j].pointer = genList(bakery_array[i][j].rank, bakery_array[i][j].toast, NULL, NULL, NULL, NULL);
+        }
+    }
+
+
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            if (i == 0){
+                if (j == 0){
+                    create_link(bakery_array[i][j].pointer, NULL, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, NULL);
+                }
+                else{
+                    if (j == m-1){
+                        create_link(bakery_array[i][j].pointer, NULL, bakery_array[i+1][j].pointer, NULL, bakery_array[i][j-1].pointer);
+                    }
+                    else{
+                        create_link(bakery_array[i][j].pointer, NULL, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, bakery_array[i][j-1].pointer);
+                    }
+                }
+            }
+            else{
+                if(i == n-1){
+                    if(j == 0){
+                        create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, NULL, bakery_array[i][j+1].pointer, NULL);
+                    }
+                    else{
+                        if (j == m-1){
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, NULL, NULL, bakery_array[i][j-1].pointer);
+                        }
+                        else{
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, NULL, bakery_array[i][j+1].pointer, bakery_array[i][j-1].pointer);
+                        }
+                    }
+                }
+                else{
+                    if(j == 0){
+                        create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, NULL);
+                    }
+                    else{
+                        if(j == m-1){
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, bakery_array[i+1][j].pointer, NULL, bakery_array[i][j-1].pointer);
+                        }
+                        else{
+
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, bakery_array[i][j-1].pointer);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    bakery_array[0][0].pointer -> top_left_corner = true;
+
+   // printlinkedlist(bakery_array[1][2].pointer);
+
+   //create second array
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            int index = bakery_array[i][j].rank;
+            array_2[index].pointer = bakery_array[i][j].pointer;
+            array_2[index].id_1 = i;
+            array_2[index].id_2 = j;
+        }
+    }
+
+    int t_1, r, t_2;
+    int r_1, l_1, s_1;
+    int r_r, l_r;
+    int r_2, l_2, s_2;
+    scanf("%d%d%d%", &t_1, &r, &t_2);
+
+    //scanf("%d%d", &r_r, &l_r);
+
+    bakery *visited[max_l];
+    int zeros[max_l];
+    int g = 0;
+    for (int i = 0; i < t_1 ; i++){  //first training period per day
+        scanf("%d%d%d", &r_1, &l_1, &s_1);
+        bakery *current = array_2[r_1].pointer;
+        bakery *next_bakery = NULL;
+       // printf("%p\n",current);
+        int count = 0;
+
+
+        visited[0] = current;
+
+        int k = 1;
+        int h = 0;
+        while (count < l_1){
+           // printf("start");
+            next_bakery = find_next(current);
+
+            //printf("next:%d\n",next_bakery -> rank);
+            if (next_bakery == NULL){
+                break;
+            }
+
+            bakery *temp;
+            temp = current;
+            current = next_bakery;
+            if (temp -> up != NULL){  //cut the one just visited (but not free)
+                temp -> up -> down = temp -> down;
+                temp -> up -> d_down = temp -> up -> d_down + temp -> d_down + 1;
+            }
+            if (temp -> down != NULL){
+                temp -> down -> up = temp -> up;
+                temp -> down -> d_up = temp -> down -> d_up + temp -> d_up + 1;
+            }
+            if (temp -> right != NULL){
+                temp -> right -> left = temp -> left;
+                temp -> right -> d_left = temp -> right -> d_left + temp -> d_left + 1;
+            }
+            if (temp -> left != NULL){
+                temp -> left -> right = temp -> right;
+                temp -> left -> d_right = temp -> left -> d_right + temp -> d_right + 1;
+            }
+
+            if (current->toast <= s_1){
+                current->toast = 0;
+                zeros[g] = current -> rank;
+                g++;
+                visited[k]= current;
+                k++;
+                }
+
+            else{
+              current->toast = current->toast - s_1;
+              visited[k]= current;
+              k++;
+
+            }
+            count++;
+        }
+
+
+                //put back the visited linked list without zero
+        for (int t = 0; t < k; t++){
+            //printf("visited : %d\n",visited[t]->rank);
+            if (visited[t] -> up != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> up -> down = visited[t] -> down;
+                    visited[t] -> up -> zd_down = visited[t] -> up -> zd_down + visited[t] -> zd_down + 1;
+                }
+                else{
+                    visited[t] -> up -> down = visited[t];
+                }
+                visited[t] -> up -> d_down = visited[t] -> up -> zd_down;
+                //printf("d_down of %d : %d\n",visited[t] -> up -> rank, visited[t] -> up -> d_down);
+            }
+            if (visited[t] -> down != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> down -> up = visited[t] -> up;
+                    visited[t] -> down -> zd_up = visited[t] -> down -> zd_up + visited[t] -> zd_up + 1;
+                }
+                else{
+                    visited[t] -> down -> up = visited[t];
+                }
+                visited[t] -> down -> d_up = visited[t] -> down -> zd_up;
+                //printf("d_up of %d : %d\n",visited[t] -> down -> rank, visited[t] -> down -> d_up);
+            }
+            if (visited[t] -> right != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> right -> left = visited[t] -> left;
+                    visited[t] -> right -> zd_left =  visited[t] -> right -> zd_left + visited[t] -> zd_left + 1;
+                }
+                else{
+                    visited[t] -> right -> left = visited[t];
+                }
+                visited[t] -> right -> d_left = visited[t] -> right -> zd_left;
+                //printf("d_left of %d : %d\n",visited[t] -> right -> rank, visited[t] -> right -> d_left);
+
+            }
+            if (visited[t] -> left != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> left -> right = visited[t] -> right;
+                    visited[t] -> left -> zd_right = visited[t] -> left -> zd_right + visited[t] -> zd_right + 1;
+             }
+                else{
+                    visited[t] -> left -> right = visited[t];
+                }
+            visited[t] -> left -> d_right = visited[t] -> left -> zd_right;
+            //printf("d_right of %d : %d\n",visited[t] -> left -> rank, visited[t] -> left -> d_right);
+
+            }
+
+
+        }
+        for(int r = 0; r < k; r++){
+            visited[r] = NULL;
+        }
+
+
+
+    }
+    //printlinkedlist(bakery_array[2][0].pointer);
+   //rotate
+   //put back the zeros
+    if (r != 0){
+        for(int i = 0; i < g; i++){
+            bakery *temp = array_2[zeros[i]].pointer;
+            if (temp -> up != NULL){
+                temp -> up -> down = temp;
+                temp -> up -> zd_down = 0;
+                temp -> up -> d_down = 0;
+            }
+            if (temp -> down != NULL){
+                temp -> down -> up = temp;
+                temp -> down -> zd_up = 0;
+                temp -> down -> d_up = 0;
+            }
+            if (temp -> right != NULL){
+                temp -> right -> left = temp;
+                temp -> right -> zd_left = 0;
+                temp -> right -> d_left = 0;
+            }
+            if (temp -> left != NULL){
+                temp -> left -> right = temp;
+                temp -> left -> zd_right = 0;
+                temp -> left -> d_right = 0;
+            }
+        }
+
+        //rotating
+        bakery *top_left_corner = bakery_array[0][0].pointer;
+        for(int h = 0; h < r; h++){
+            //printf("rotating\n");
+
+            scanf("%d%d",&r_r, &l_r);
+            if(l_r != 1){
+                //printf("doing\n");
+                bakery *middle = array_2[r_r].pointer;
+
+            bakery *node1 = middle -> left;
+            bakery *node2 = middle -> right;
+            int length = l_r/2;
+            bakery *node1_prev = node1;
+            bakery *node2_prev = node2;
+            bakery *node1_check = middle;
+            bakery *node2_check = middle;
+            for(int i = 0; i < length - 1; i++){   //node move to left or right
+                if(node1 -> left != node1_check)
+                    node1 = node1 -> left;
+                else
+                    node1 = node1 -> right;
+                node1_check = node1_prev;
+                node1_prev = node1;
+                if(node2 -> right != node2_check)
+                    node2 = node2 -> right;
+                else
+                    node2 = node2 -> left;
+                node2_check = node2_prev;
+                node2_prev = node2;
+            }
+
+            bakery *node1_b = NULL;
+            bakery *node2_b = NULL;
+            if(node1 -> left != node1_check) //get node1_b
+                    node1_b = node1 -> left;
+            else
+                node1_b = node1 -> right;
+            bakery *temp_node1_b = node1_b;
+            if(node2 -> right != node2_check) //get node2_b
+                node2_b = node2 -> right;
+            else
+                node2_b = node2 -> left;
+            bakery *temp_node2_b = node2_b;
+            bakery *node1_b1 = NULL;
+            bakery *node1_b2 = NULL;
+            bakery *node1_b1_prev = NULL;
+            bakery *node1_b2_prev = NULL;
+            bakery *node1_b1_check = NULL;
+            bakery *node1_b2_check = NULL;
+            //printf("here\n");
+            if(node1_b != NULL){ //get node1 side boundary points
+                node1_b -> boundary = true;
+                node1_b1 = node1_b -> up;
+                node1_b1 -> boundary = true;
+                node1_b2 = node1_b -> down;
+                node1_b2 -> boundary = true;
+                node1_b1_prev = node1_b1;
+                node1_b2_prev = node1_b2;
+                node1_b1_check = node1_b;
+                node1_b2_check = node1_b;
+//
+            }
+            bakery *temp_node1_b1 = node1_b1;
+            bakery *temp_node1_b2 = node1_b2;
+
+            bakery *node2_b1 = NULL;
+            bakery *node2_b2 = NULL;
+            bakery *node2_b1_prev = NULL;
+            bakery *node2_b2_prev = NULL;
+            bakery *node2_b1_check = NULL;
+            bakery *node2_b2_check = NULL;
+            if(node2_b != NULL){//get node2 side boundary points
+                node2_b -> boundary = true;
+                node2_b1 = node2_b -> up;
+                node2_b1 -> boundary = true;
+                node2_b2 = node2_b -> down;
+                node2_b2 -> boundary = true;
+                node2_b1_prev = node2_b1;
+                node2_b2_prev = node2_b2;
+                node2_b1_check = node2_b;
+                node2_b2_check = node2_b;
+
+            }
+            bakery *temp_node2_b1 = node2_b1;
+            bakery *temp_node2_b2 = node2_b2;
+
+
+            node2_check = node2_prev;
+            node2_prev = node2;
+            bakery *node1_1 = node1 -> up;
+            bakery *node1_1_prev = node1_1;
+            bakery *node1_2 = node1 -> down;
+            bakery *node1_2_prev = node1_2;
+            bakery *node1_1_check = node1;
+            bakery *node1_2_check = node1;
+            bakery *node2_rf = node2 -> up;
+            bakery *node2_rf_prev = node2_rf;
+            bakery *node2_rf_check = node2;
+            node2_check = node2;
+            node2 = node2 -> down;
+            node2_prev = node2;
+            bakery *node1_rf = NULL;
+
+            for(int i = 0; i < length - 1; i++){   //node move to up or down
+                if(node1_1 -> up != node1_1_check)
+                    node1_1 = node1_1 -> up;
+                else
+                    node1_1 = node1_1 -> down;
+                node1_1_check = node1_1_prev;
+                node1_1_prev = node1_1;
+                if(node1_2 -> down != node1_2_check)
+                    node1_2 = node1_2 -> down;
+                else
+                    node1_2 = node1_2 -> up;
+                node1_2_check = node1_2_prev;
+                node1_2_prev = node1_2;
+                if(node2_rf -> up != node2_rf_check)
+                    node2_rf = node2_rf -> up;
+                else
+                    node2_rf = node2_rf -> down;
+                node2_rf_check = node2_rf_prev;
+                node2_rf_prev = node2_rf;
+                if(node2 -> down != node2_check)
+                    node2 = node2 -> down;
+                else
+                    node2 = node2 -> up;
+                node2_check = node2_prev;
+                node2_prev = node2;
+                //set up boundary by for loop
+                if(node1_b != NULL){ //node1 side
+                    if(node1_b1 -> up != node1_b1_check)
+                        node1_b1 = node1_b1 -> up;
+                    else
+                        node1_b1 = node1_b1 -> down;
+                    node1_b1_check = node1_b1_prev;
+                    node1_b1_prev = node1_b1;
+                    node1_b1 -> boundary = true;
+                    //printf("node1_b1 moving : %d\n",node1_b1 -> rank);
+                    if(node1_b2 -> down != node1_b2_check)
+                        node1_b2 = node1_b2 -> down;
+                    else
+                        node1_b2 = node1_b2 -> up;
+                    node1_b2_check = node1_b2_prev;
+                    node1_b2_prev = node1_b2;
+                    node1_b2 -> boundary = true;
+                   // printf("node1_b2 moving : %d\n",node1_b2 -> rank);
+                }
+                if(node2_b != NULL){ //node2 side
+                    if(node2_b1 -> up != node2_b1_check)
+                        node2_b1 = node2_b1 -> up;
+                    else
+                        node2_b1 = node2_b1 -> down;
+                    node2_b1_check = node2_b1_prev;
+                    node2_b1_prev = node2_b1;
+                    node2_b1 -> boundary = true;
+                  //  printf("node2_b1 moving : %d\n",node2_b1 -> rank);
+                    if(node2_b2 -> down != node2_b2_check)
+                        node2_b2 = node2_b2 -> down;
+                    else
+                        node2_b2 = node2_b2 -> up;
+                    node2_b2_check = node2_b2_prev;
+                    node2_b2_prev = node2_b2;
+                    node2_b2 -> boundary = true;
+                   // printf("node2_b2 moving : %d\n",node2_b2 -> rank);
+                }
+
+
+            }
+            //get up and down boundary points(theres 4)
+            bakery *node1_1_b = NULL;
+            bakery *node1_2_b = NULL;
+            bakery *node2_bb = NULL;
+            bakery *node2_rf_b = NULL;
+//            printf("node1_1 : %d\n",node1_1 -> rank);
+//            printf("node1_1_check : %d\n",node1_1_check -> rank);
+
+            if(node1_1 -> up != node1_1_check)
+                    node1_1_b = node1_1 -> up;
+            else
+                    node1_1_b = node1_1 -> down;
+            if(node1_2 -> down != node1_2_check)
+                    node1_2_b = node1_2 -> down;
+            else
+                    node1_2_b = node1_2 -> up;
+
+            if(node2_rf -> up != node2_rf_check)
+                    node2_rf_b = node2_rf -> up;
+            else
+                    node2_rf_b = node2_rf -> down;
+            if(node2 -> down != node2_check)
+                    node2_bb = node2 -> down;
+            else
+                    node2_bb = node2 -> up;
+
+
+            bakery *temp_node1_1_b = node1_1_b;
+            bakery *temp_node1_2_b = node1_2_b;
+            bakery *temp_node2_bb = node2_bb;
+            bakery *temp_node2_rf_b = node2_rf_b;
+            //set the boundaries
+            //set up left up corner side boundary
+            bakery *node1_1_b1 = NULL;
+            bakery *node1_1_b2 = NULL;
+            bakery *node1_1_b1_prev = NULL;
+            bakery *node1_1_b2_prev = NULL;
+            bakery *node1_1_b1_check = NULL;
+            bakery *node1_1_b2_check = NULL;
+            if(node1_1_b != NULL){
+                node1_1_b -> boundary = true;
+                node1_1_b1 = node1_1_b -> left;
+                if (node1_1_b1 != NULL)
+                    node1_1_b1 -> boundary = true;
+                node1_1_b2 = node1_1_b -> right;
+                if (node1_1_b2 != NULL)
+                    node1_1_b2 -> boundary = true;
+                node1_1_b1_prev = node1_1_b1;
+                node1_1_b2_prev = node1_1_b2;
+                node1_1_b1_check = node1_1_b;
+                node1_1_b2_check = node1_1_b;
+
+            }
+//            bakery *temp_node1_1_b1 = node1_1_b1;
+//            bakery *temp_node1_1_b2 = node1_1_b2;
+            //set up right up corner side boundary
+            bakery *node2_rf_b1 = NULL;
+            bakery *node2_rf_b2 = NULL;
+            bakery *node2_rf_b1_prev = NULL;
+            bakery *node2_rf_b2_prev = NULL;
+            bakery *node2_rf_b1_check = NULL;
+            bakery *node2_rf_b2_check = NULL;
+            if(node2_rf_b != NULL){
+                node2_rf_b -> boundary = true;
+                node2_rf_b1 = node2_rf_b -> left;
+                if (node2_rf_b1 != NULL)
+                    node2_rf_b1 -> boundary = true;
+                node2_rf_b2 = node2_rf_b -> right;
+                if(node2_rf_b2 != NULL)
+                    node2_rf_b2 -> boundary = true;
+                node2_rf_b1_prev = node2_rf_b1;
+                node2_rf_b2_prev = node2_rf_b2;
+                node2_rf_b1_check = node2_rf_b;
+                node2_rf_b2_check = node2_rf_b;
+//
+
+            }
+//            bakery *temp_node2_rf_b1 = node2_rf_b1;
+//            bakery *temp_node2_rf_b2 = node2_rf_b2;
+            //set up left down corner side boundary
+            bakery *node1_2_b1 = NULL;
+            bakery *node1_2_b2 = NULL;
+            bakery *node1_2_b1_prev = NULL;
+            bakery *node1_2_b2_prev = NULL;
+            bakery *node1_2_b1_check = NULL;
+            bakery *node1_2_b2_check = NULL;
+            if(node1_2_b != NULL){
+                node1_2_b -> boundary = true;
+                node1_2_b1 = node1_2_b -> left;
+                if (node1_2_b1 != NULL)
+                    node1_2_b1 -> boundary = true;
+                node1_2_b2 = node1_2_b -> right;
+                if (node1_2_b2 != NULL)
+                    node1_2_b2 -> boundary = true;
+                node1_2_b1_prev = node1_2_b1;
+                node1_2_b2_prev = node1_2_b2;
+                node1_2_b1_check = node1_2_b;
+                node1_2_b2_check = node1_2_b;
+
+
+            }
+//            bakery *temp_node1_2_b1 = node1_2_b1;
+//            bakery *temp_node1_2_b2 = node1_2_b2;
+            //set up right down corner side boundary
+            bakery *node2_bb1 = NULL;
+            bakery *node2_bb2 = NULL;
+            bakery *node2_bb1_prev = NULL;
+            bakery *node2_bb2_prev = NULL;
+            bakery *node2_bb1_check = NULL;
+            bakery *node2_bb2_check = NULL;
+            if(node2_bb != NULL){
+                node2_bb -> boundary = true;
+                node2_bb1 = node2_bb -> left;
+                if (node2_bb1 != NULL)
+                    node2_bb1 -> boundary = true;
+                node2_bb2 = node2_bb -> right;
+                if(node2_bb2 != NULL)
+                    node2_bb2 -> boundary = true;
+                node2_bb1_prev = node2_bb1;
+                node2_bb2_prev = node2_bb2;
+                node2_bb1_check = node2_bb;
+                node2_bb2_check = node2_bb;
+
+            }
+//            bakery *temp_node2_bb1 = node2_bb1;
+//            bakery *temp_node2_bb2 = node2_bb2;
+            //set up and down boundaries by for loop
+            for(int i = 0; i < length - 1; i++){
+              //  printf("i\n");
+                if(node1_1_b != NULL){ //node1_1_b side
+                    if(node1_1_b1 != NULL){
+                        if(node1_1_b1 -> left != node1_1_b1_check)
+                            node1_1_b1 = node1_1_b1 -> left;
+                        else
+                            node1_1_b1 = node1_1_b1 -> right;
+                        node1_1_b1_check = node1_1_b1_prev;
+                        node1_1_b1_prev = node1_1_b1;
+                        if(node1_1_b1 != NULL){
+                            node1_1_b1 -> boundary = true;
+                           // printf("boundary : %d\n",node1_1_b1 -> rank);
+                        }
+                    }
+                    if(node1_1_b2 != NULL){
+                        if(node1_1_b2 -> right != node1_1_b2_check)
+                            node1_1_b2 = node1_1_b2 -> right;
+                        else
+                            node1_1_b2 = node1_1_b2 -> left;
+                        node1_1_b2_check = node1_1_b2_prev;
+                        node1_1_b2_prev = node1_1_b2;
+                        if(node1_1_b2 != NULL){
+                            node1_1_b2 -> boundary = true;
+                           // printf("boundary : %d\n",node1_1_b2 -> rank);
+                        }
+
+                    }
+                }
+                if(node1_2_b != NULL){ //node1_2_b side
+                    if(node1_2_b1 != NULL){
+                        if(node1_2_b1 -> left != node1_2_b1_check)
+                            node1_2_b1 = node1_2_b1 -> left;
+                        else
+                            node1_2_b1 = node1_2_b1 -> right;
+                        node1_2_b1_check = node1_2_b1_prev;
+                        node1_2_b1_prev = node1_2_b1;
+                        if (node1_2_b1 != NULL){
+                            node1_2_b1 -> boundary = true;
+                           // printf("boundary : %d\n",node1_2_b1 -> rank);
+                        }
+
+                    }
+                    if(node1_2_b2 != NULL){
+                        if(node1_2_b2 -> right != node1_2_b2_check)
+                            node1_2_b2 = node1_2_b2 -> right;
+                        else
+                            node1_2_b2 = node1_2_b2 -> left;
+                        node1_2_b2_check = node1_2_b2_prev;
+                        node1_2_b2_prev = node1_2_b2;
+                        if(node1_2_b2 != NULL){
+                            node1_2_b2 -> boundary = true;
+                          //  printf("boundary : %d\n",node1_2_b2 -> rank);
+                        }
+
+                    }
+                }
+                  if(node2_rf_b != NULL){ //node2_rf_b side
+                    if(node2_rf_b1 != NULL){
+                        if(node2_rf_b1 -> left != node2_rf_b1_check)
+                            node2_rf_b1 = node2_rf_b1 -> left;
+                        else
+                            node2_rf_b1 = node2_rf_b1 -> right;
+                        node2_rf_b1_check = node2_rf_b1_prev;
+                        node2_rf_b1_prev = node2_rf_b1;
+                        if(node2_rf_b1 != NULL){
+                            node2_rf_b1 -> boundary = true;
+                         //   printf("boundary : %d\n",node2_rf_b1 -> rank);
+                        }
+
+                    }
+                    if(node2_rf_b2 != NULL){
+                        if(node2_rf_b2 -> right != node2_rf_b2_check)
+                            node2_rf_b2 = node2_rf_b2 -> right;
+                        else
+                            node2_rf_b2 = node2_rf_b2 -> left;
+                        node2_rf_b2_check = node2_rf_b2_prev;
+                        node2_rf_b2_prev = node2_rf_b2;
+                        if(node2_rf_b2 != NULL){
+                            node2_rf_b2 -> boundary = true;
+                       //     printf("boundary : %d\n",node2_rf_b2 -> rank);
+                        }
+
+                    }
+                }
+                if(node2_bb != NULL){ //node2_bb side
+                    if(node2_bb1 != NULL){
+                        if(node2_bb1 -> left != node2_bb1_check)
+                            node2_bb1 = node2_bb1 -> left;
+                        else
+                            node2_bb1 = node2_bb1 -> right;
+                        node2_bb1_check = node2_bb1_prev;
+                        node2_bb1_prev = node2_bb1;
+                        if(node2_bb1 != NULL){
+                            node2_bb1 -> boundary = true;
+                         //   printf("boundary : %d\n",node2_bb1 -> rank);
+                        }
+
+                    }
+                    if(node2_bb2 != NULL){
+                        if(node2_bb2 -> right != node2_bb2_check)
+                            node2_bb2 = node2_bb2 -> right;
+                        else
+                            node2_bb2 = node2_bb2 -> left;
+                        node2_bb2_check = node2_bb2_prev;
+                        node2_bb2_prev = node2_bb2;
+                        if(node2_bb2 != NULL){
+                            node2_bb2 -> boundary = true;
+                          //  printf("boundary : %d\n",node2_bb2 -> rank);
+                        }
+
+                    }
+                }
+          //finish setting up all boundaries
+
+            }
+
+            bakery *temp_1 = node1_2 -> left;   //check if the two points are correct
+            bakery *temp_2 = node1_2 -> right;
+            bakery *temp_1_prev = temp_1;
+            bakery *temp_2_prev = temp_2;
+            bakery *temp_1_check = node1_2;
+            bakery *temp_2_check = node1_2;
+            for(int z = 1; z < l_r - 1; z++){
+                if (temp_1 != NULL){
+                    if(temp_1 -> left != temp_1_check)
+                        temp_1 = temp_1 -> left;
+                    else
+                        temp_1 = temp_1 -> right;
+                    temp_1_check = temp_1_prev;
+                    temp_1_prev = temp_1;
+                }
+                if (temp_2 != NULL){
+                    if(temp_2 -> right != temp_2_check)
+                        temp_2 = temp_2 -> right;
+                    else
+                        temp_2 = temp_2 -> left;
+                    temp_2_check = temp_2_prev;
+                    temp_2_prev = temp_2;
+                }
+            }
+
+            if(temp_1 == node2 || temp_2 == node2){
+                node1 = node1_1;
+                node1_check = node1_1_check;
+                node1_prev = node1;
+                node1_rf = node1_2;
+
+            }
+            else{
+                node1 = node1_2;
+                node1_check = node1_2_check;
+                node1_prev = node1;
+                node1_rf = node1_1;
+            }
+            //both nodes found
+             if(node1 == top_left_corner){
+                    top_left_corner = node2;
+            }
+            else{
+                if(node2 == top_left_corner)
+                    top_left_corner = node1;
+            }
+
+
+
+            //start rotating
+            int direction; //down is 0 up is 1
+            if( node1 -> up == NULL || node1 -> up -> boundary == true)
+                direction = 0;
+            else
+                direction = 1;
+            int direction2; //down is 2 up is 3
+            if( node2 -> up == NULL || node2 -> up -> boundary == true)
+                direction2 = 2;
+            else
+                direction2 = 3;
+
+          //  printf("actual move node\n");
+            bool once = true;
+            for(int i = 0; i < l_r; i++){
+                if (i != 0){ // move node
+                    if(direction == 0){
+                        if(i == 1 || node1 -> down != node1_check)
+                            node1 = node1 -> down;
+                        else
+                            node1 = node1 -> up;
+                        node1_check = node1_prev;
+                        node1_prev = node1;
+                    }
+                    else{
+                        if(i == 1 || node1 -> up != node1_check)
+                            node1 = node1 -> up;
+                        else
+                            node1 = node1 -> down;
+                        node1_check = node1_prev;
+                        node1_prev = node1;
+                    }
+                    if(direction2 == 2){
+                        if(i == 1 || node2 -> down != node2_check)
+                            node2 = node2 -> down;
+                        else
+                            node2 = node2 -> up;
+                        node2_check = node2_prev;
+                        node2_prev = node2;
+                    }
+                    else{
+                        if(i == 1 || node2 -> up != node2_check)
+                            node2 = node2 -> up;
+                        else
+                            node2 = node2 -> down;
+                        node2_check = node2_prev;
+                        node2_prev = node2;
+                    }
+
+                }
+//
+                //change node
+                bakery *temp;
+                bakery *temp2;
+                int direction3; //left is 0 right is 1
+                int direction4;
+                if(node1 -> left == NULL || node1 -> left -> boundary == true){ //find node1 boundary
+                    temp = node1 -> left;
+                    direction3 = 0;
+                }
+                else{
+                    temp = node1 -> right;
+                    direction3 = 1;
+                }
+                if(node2 -> left == NULL || node2 -> left -> boundary == true){ //find node2 boundary
+                    temp2 = node2 -> left;
+                    direction4 = 0;
+                }
+                else{
+                    temp2 = node2 -> right;
+                    direction4 = 1;
+                }
+                //printf("changing\n");
+
+                //change
+                if(direction3 == 0)
+                    node1 -> left = temp2;
+                else
+                    node1 -> right = temp2;
+
+                if (temp != NULL){
+                    if(temp -> right == node1)
+                        temp -> right = node2;
+                    else
+                        temp -> left = node2;
+                }
+
+                if(direction4 == 0)
+                    node2 -> left = temp;
+                else
+                    node2 -> right = temp;
+                if(temp2 != NULL){
+                    if(temp2 -> right == node2)
+                        temp2 -> right = node1;
+                    else
+                        temp2 -> left = node1;
+                }
+
+//                if (node1 -> top_left_corner == true && once){ // exchange top left corner if needed
+//                    node2 -> top_left_corner == true;
+//                    node1 -> top_left_corner == false;
+//                    top_left_corner = node2;
+//                    once = false;
+//                }
+//                if (node2 -> top_left_corner == true && once){
+//                    node1 -> top_left_corner == true;
+//                    node2 -> top_left_corner == false;
+//                    top_left_corner = node1;
+//                    once = false;
+//                }
+
+//                printf("top_left_corner : %d\n",top_left_corner -> rank);
+//                printf("node1 : %d\n",node1 -> rank);
+//                printf("node2 : %d\n",node2 -> rank);
+//                if(temp!= NULL)
+//                    printf("temp : %d\n",temp -> rank);
+//                if(temp2!= NULL)
+//                    printf("temp2 : %d\n",temp2 -> rank);
+
+
+
+            }
+             //right is 0 left is 1
+            if( node1 -> left == NULL || node1 -> left -> boundary == true)
+                direction = 0;
+            else
+                direction = 1;
+             //right is 2 left is 3
+            if( node2 -> left == NULL || node2 -> left -> boundary == true)
+                direction2 = 2;
+            else
+                direction2 = 3;
+            if(node1 == top_left_corner){
+                    top_left_corner = node2;
+            }
+            else{
+                if(node2 == top_left_corner)
+                    top_left_corner = node1;
+            }
+
+//            printf("right left\n");
+//            printf("direction : %d\n",direction);
+//            printf("direction2 : %d\n",direction2);
+            for(int i = 0; i < l_r; i++){
+                if (i != 0){ // move node
+                    if(direction == 0){
+                        if(i == 1 || node1 -> right != node1_check)
+                            node1 = node1 -> right;
+                        else
+                            node1 = node1 -> left;
+                        node1_check = node1_prev;
+                        node1_prev = node1;
+                    }
+                    else{
+                        if(i == 1 || node1 -> left != node1_check)
+                            node1 = node1 -> left;
+                        else
+                            node1 = node1 -> right;
+                        node1_check = node1_prev;
+                        node1_prev = node1;
+                    }
+                    if(direction2 == 2){
+                        if(i == 1 || node2 -> right != node2_check)
+                            node2 = node2 -> right;
+                        else
+                            node2 = node2 -> left;
+                        node2_check = node2_prev;
+                        node2_prev = node2;
+                    }
+                    else{
+                        if(i == 1 || node2 -> left != node2_check)
+                            node2 = node2 -> left;
+                        else
+                            node2 = node2 -> right;
+                        node2_check = node2_prev;
+                        node2_prev = node2;
+                    }
+
+                }
+//                printf("moving node1 : %d\n",node1 -> rank);
+//                printf("moving node2 :%d\n",node2 -> rank);
+                //change node
+                bakery *temp;
+                bakery *temp2;
+
+                int direction3; //left is 0 right is 1
+                int direction4;
+                if(node1 -> up == NULL || node1 -> up -> boundary == true){ //find node1 boundary
+                    temp = node1 -> up;
+                    direction3 = 0;
+                }
+                else{
+                    temp = node1 -> down;
+                    direction3 = 1;
+                }
+                if(node2 -> up == NULL || node2 -> up -> boundary == true){ //find node2 boundary
+                    temp2 = node2 -> up;
+                    direction4 = 0;
+                }
+                else{
+                    temp2 = node2 -> down;
+                    direction4 = 1;
+                }
+               // printf("changing\n");
+
+                //change
+//                printf("direction3 : %d\n",direction3);
+//            printf("direction4 : %d\n",direction4);
+                if(direction3 == 0)
+                    node1 -> up = temp2;
+                else
+                    node1 -> down = temp2;
+
+                if (temp != NULL){
+                    if(temp -> down == node1)
+                        temp -> down = node2;
+                    else
+                        temp -> up = node2;
+                }
+
+                if(direction4 == 0)
+                    node2 -> up = temp;
+                else
+                    node2 -> down = temp;
+                if(temp2 != NULL){
+                    if(temp2 -> down == node2)
+                        temp2 -> down = node1;
+                    else
+                        temp2 -> up = node1;
+                }
+//                printf("node1 & node2 : %d & %d\n",node1->rank,node2->rank);
+//                if (node1 -> top_left_corner == true && once){ // exchange top left corner if needed
+//                    node2 -> top_left_corner == true;
+//                    node1 -> top_left_corner == false;
+//                    top_left_corner = node2;
+//                    once = false;
+//                }
+//                if (node2 -> top_left_corner == true && once){
+//                    node1 -> top_left_corner == true;
+//                    node2 -> top_left_corner == false;
+//                    top_left_corner = node1;
+//                    once = false;
+//
+//                }
+//                printf("top_left_corner : %d\n",top_left_corner -> rank);
+//                printf("node1 : %d\n",node1 -> rank);
+//                printf("node2 : %d\n",node2 -> rank);
+//                if(temp!= NULL)
+//                    printf("temp : %d\n",temp -> rank);
+//                if(temp2!= NULL)
+//                    printf("temp2 : %d\n",temp2 -> rank);
+
+            }
+            //finish changing
+            //set the boundaries back to false
+
+            node1_b = temp_node1_b;
+            if(node1_b != NULL){ //get node1 side boundary points
+                node1_b -> boundary = false;
+                node1_b1 = node1_b -> up;
+                node1_b1 -> boundary = false;
+                node1_b2 = node1_b -> down;
+                node1_b2 -> boundary = false;
+                node1_b1_prev = node1_b1;
+                node1_b2_prev = node1_b2;
+                node1_b1_check = node1_b;
+                node1_b2_check = node1_b;
+
+            }
+            node2_b = temp_node2_b;
+            if(node2_b != NULL){//get node2 side boundary points
+                node2_b -> boundary = false;
+                node2_b1 = node2_b -> up;
+                node2_b1 -> boundary = false;
+                node2_b2 = node2_b -> down;
+                node2_b2 -> boundary = false;
+                node2_b1_prev = node2_b1;
+                node2_b2_prev = node2_b2;
+                node2_b1_check = node2_b;
+                node2_b2_check = node2_b;
+            }
+
+            //set up left up corner side boundary
+            node1_1_b = temp_node1_1_b;
+            if(node1_1_b != NULL){
+                node1_1_b -> boundary = false;
+                node1_1_b1 = node1_1_b -> left;
+                if (node1_1_b1 != NULL)
+                    node1_1_b1 -> boundary = false;
+                node1_1_b2 = node1_1_b -> right;
+                if (node1_1_b2 != NULL)
+                    node1_1_b2 -> boundary = false;
+                node1_1_b1_prev = node1_1_b1;
+                node1_1_b2_prev = node1_1_b2;
+                node1_1_b1_check = node1_1_b;
+                node1_1_b2_check = node1_1_b;
+
+            }
+//            bakery *temp_node1_1_b1 = node1_1_b1;
+//            bakery *temp_node1_1_b2 = node1_1_b2;
+            //set up right up corner side boundary
+            node2_rf_b = temp_node2_rf_b;
+            if(node2_rf_b != NULL){
+                node2_rf_b -> boundary = false;
+                node2_rf_b1 = node2_rf_b -> left;
+                if (node2_rf_b1 != NULL)
+                    node2_rf_b1 -> boundary = false;
+                node2_rf_b2 = node2_rf_b -> right;
+                if(node2_rf_b2 != NULL)
+                    node2_rf_b2 -> boundary = false;
+                node2_rf_b1_prev = node2_rf_b1;
+                node2_rf_b2_prev = node2_rf_b2;
+                node2_rf_b1_check = node2_rf_b;
+                node2_rf_b2_check = node2_rf_b;
+
+            }
+            //set up left down corner side boundary
+            node1_2_b = temp_node1_2_b;
+            if(node1_2_b != NULL){
+                node1_2_b -> boundary = false;
+                node1_2_b1 = node1_2_b -> left;
+                if (node1_2_b1 != NULL)
+                    node1_2_b1 -> boundary = false;
+                node1_2_b2 = node1_2_b -> right;
+                if (node1_2_b2 != NULL)
+                    node1_2_b2 -> boundary = false;
+                node1_2_b1_prev = node1_2_b1;
+                node1_2_b2_prev = node1_2_b2;
+                node1_2_b1_check = node1_2_b;
+                node1_2_b2_check = node1_2_b;
+
+            }
+
+            //set up right down corner side boundary
+            node2_bb = temp_node2_bb;
+            if(node2_bb != NULL){
+                node2_bb -> boundary = false;
+                node2_bb1 = node2_bb -> left;
+                if (node2_bb1 != NULL)
+                    node2_bb1 -> boundary = false;
+                node2_bb2 = node2_bb -> right;
+                if(node2_bb2 != NULL)
+                    node2_bb2 -> boundary = false;
+                node2_bb1_prev = node2_bb1;
+                node2_bb2_prev = node2_bb2;
+                node2_bb1_check = node2_bb;
+                node2_bb2_check = node2_bb;
+            }
+
+            for(int i = 0; i < length - 1; i++){
+               // printf("i\n");
+                if(node1_1_b != NULL){ //node1_1_b side
+                    if(node1_1_b1 != NULL){
+                        if(node1_1_b1 -> left != node1_1_b1_check)
+                            node1_1_b1 = node1_1_b1 -> left;
+                        else
+                            node1_1_b1 = node1_1_b1 -> right;
+                        node1_1_b1_check = node1_1_b1_prev;
+                        node1_1_b1_prev = node1_1_b1;
+                        if(node1_1_b1 != NULL){
+                            node1_1_b1 -> boundary = false;
+                       //     printf("boundary : %d\n",node1_1_b1 -> rank);
+                        }
+                    }
+                    if(node1_1_b2 != NULL){
+                        if(node1_1_b2 -> right != node1_1_b2_check)
+                            node1_1_b2 = node1_1_b2 -> right;
+                        else
+                            node1_1_b2 = node1_1_b2 -> left;
+                        node1_1_b2_check = node1_1_b2_prev;
+                        node1_1_b2_prev = node1_1_b2;
+                        if(node1_1_b2 != NULL){
+                            node1_1_b2 -> boundary = false;
+                        //    printf("boundary : %d\n",node1_1_b2 -> rank);
+                        }
+
+                    }
+                }
+                if(node1_2_b != NULL){ //node1_2_b side
+                    if(node1_2_b1 != NULL){
+                        if(node1_2_b1 -> left != node1_2_b1_check)
+                            node1_2_b1 = node1_2_b1 -> left;
+                        else
+                            node1_2_b1 = node1_2_b1 -> right;
+                        node1_2_b1_check = node1_2_b1_prev;
+                        node1_2_b1_prev = node1_2_b1;
+                        if (node1_2_b1 != NULL){
+                            node1_2_b1 -> boundary = false;
+                         //   printf("boundary : %d\n",node1_2_b1 -> rank);
+                        }
+
+                    }
+                    if(node1_2_b2 != NULL){
+                        if(node1_2_b2 -> right != node1_2_b2_check)
+                            node1_2_b2 = node1_2_b2 -> right;
+                        else
+                            node1_2_b2 = node1_2_b2 -> left;
+                        node1_2_b2_check = node1_2_b2_prev;
+                        node1_2_b2_prev = node1_2_b2;
+                        if(node1_2_b2 != NULL){
+                            node1_2_b2 -> boundary = false;
+                         //   printf("boundary : %d\n",node1_2_b2 -> rank);
+                        }
+
+                    }
+                }
+                  if(node2_rf_b != NULL){ //node2_rf_b side
+                    if(node2_rf_b1 != NULL){
+                        if(node2_rf_b1 -> left != node2_rf_b1_check)
+                            node2_rf_b1 = node2_rf_b1 -> left;
+                        else
+                            node2_rf_b1 = node2_rf_b1 -> right;
+                        node2_rf_b1_check = node2_rf_b1_prev;
+                        node2_rf_b1_prev = node2_rf_b1;
+                        if(node2_rf_b1 != NULL){
+                            node2_rf_b1 -> boundary = false;
+                         //   printf("boundary : %d\n",node2_rf_b1 -> rank);
+                        }
+
+                    }
+                    if(node2_rf_b2 != NULL){
+                        if(node2_rf_b2 -> right != node2_rf_b2_check)
+                            node2_rf_b2 = node2_rf_b2 -> right;
+                        else
+                            node2_rf_b2 = node2_rf_b2 -> left;
+                        node2_rf_b2_check = node2_rf_b2_prev;
+                        node2_rf_b2_prev = node2_rf_b2;
+                        if(node2_rf_b2 != NULL){
+                            node2_rf_b2 -> boundary = false;
+                        //    printf("boundary : %d\n",node2_rf_b2 -> rank);
+                        }
+
+                    }
+                }
+                if(node2_bb != NULL){ //node2_bb side
+                    if(node2_bb1 != NULL){
+                        if(node2_bb1 -> left != node2_bb1_check)
+                            node2_bb1 = node2_bb1 -> left;
+                        else
+                            node2_bb1 = node2_bb1 -> right;
+                        node2_bb1_check = node2_bb1_prev;
+                        node2_bb1_prev = node2_bb1;
+                        if(node2_bb1 != NULL){
+                            node2_bb1 -> boundary = false;
+                     //       printf("boundary : %d\n",node2_bb1 -> rank);
+                        }
+
+                    }
+                    if(node2_bb2 != NULL){
+                        if(node2_bb2 -> right != node2_bb2_check)
+                            node2_bb2 = node2_bb2 -> right;
+                        else
+                            node2_bb2 = node2_bb2 -> left;
+                        node2_bb2_check = node2_bb2_prev;
+                        node2_bb2_prev = node2_bb2;
+                        if(node2_bb2 != NULL){
+                            node2_bb2 -> boundary = false;
+                       //     printf("boundary : %d\n",node2_bb2 -> rank);
+                        }
+
+                    }
+                }
+                    if(node1_b != NULL){ //node1 side
+                    if(node1_b1 -> up != node1_b1_check)
+                        node1_b1 = node1_b1 -> up;
+                    else
+                        node1_b1 = node1_b1 -> down;
+                    node1_b1_check = node1_b1_prev;
+                    node1_b1_prev = node1_b1;
+                    node1_b1 -> boundary = false;
+                   // printf("node1_b1 moving : %d\n",node1_b1 -> rank);
+                    if(node1_b2 -> down != node1_b2_check)
+                        node1_b2 = node1_b2 -> down;
+                    else
+                        node1_b2 = node1_b2 -> up;
+                    node1_b2_check = node1_b2_prev;
+                    node1_b2_prev = node1_b2;
+                    node1_b2 -> boundary = false;
+                    //printf("node1_b2 moving : %d\n",node1_b2 -> rank);
+                }
+                if(node2_b != NULL){ //node2 side
+                    if(node2_b1 -> up != node2_b1_check)
+                        node2_b1 = node2_b1 -> up;
+                    else
+                        node2_b1 = node2_b1 -> down;
+                    node2_b1_check = node2_b1_prev;
+                    node2_b1_prev = node2_b1;
+                    node2_b1 -> boundary = false;
+                   // printf("node2_b1 moving : %d\n",node2_b1 -> rank);
+                    if(node2_b2 -> down != node2_b2_check)
+                        node2_b2 = node2_b2 -> down;
+                    else
+                        node2_b2 = node2_b2 -> up;
+                    node2_b2_check = node2_b2_prev;
+                    node2_b2_prev = node2_b2;
+                    node2_b2 -> boundary = false;
+                   // printf("node2_b2 moving : %d\n",node2_b2 -> rank);
+                }
+                }
+            }
+
+
+
+        }
+
+        // put back the links
+        //find one corner
+
+//        printf("top_left_corner : %d\n",top_left_corner -> rank);
+        bakery *node = top_left_corner;
+        bakery *prev;
+        bakery *check;
+        bakery *i_control;
+        bakery *i_control_prev;
+        bakery *i_control_check;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                bakery_array[i][j].pointer = node;
+                //printf("node : %d\n",node -> rank);
+                if (j==0){
+                   if(node -> left != NULL){
+                    node -> right = node -> left;
+                    node -> left = NULL;
+                   }
+                   check = node;
+                   node = node -> right;
+                   prev = node;
+
+                }
+                else{
+                    if(node -> right != check)
+                            node = node -> right;
+                        else
+                            node = node -> left;
+                        check = prev;
+                        prev = node;
+                }
+
+            }
+
+            if (i==0){
+                i_control = top_left_corner;
+                if(i_control -> up != NULL){
+                        i_control -> down = i_control -> up;
+                        i_control -> up = NULL;
+                }
+                i_control_check = i_control;
+                i_control = i_control -> down;
+                i_control_prev = i_control;
+            }
+            else{
+                if(i_control -> down != i_control_check)
+                    i_control = i_control -> down;
+                else
+                    i_control = i_control -> up;
+                i_control_check = i_control_prev;
+                i_control_prev = i_control;
+                }
+            node =  i_control;
+
+        }
+        for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            if (i == 0){
+                if (j == 0){
+                    create_link(bakery_array[i][j].pointer, NULL, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, NULL);
+                }
+                else{
+                    if (j == m-1){
+                        create_link(bakery_array[i][j].pointer, NULL, bakery_array[i+1][j].pointer, NULL, bakery_array[i][j-1].pointer);
+                    }
+                    else{
+                        create_link(bakery_array[i][j].pointer, NULL, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, bakery_array[i][j-1].pointer);
+                    }
+                }
+            }
+            else{
+                if(i == n-1){
+                    if(j == 0){
+                        create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, NULL, bakery_array[i][j+1].pointer, NULL);
+                    }
+                    else{
+                        if (j == m-1){
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, NULL, NULL, bakery_array[i][j-1].pointer);
+                        }
+                        else{
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, NULL, bakery_array[i][j+1].pointer, bakery_array[i][j-1].pointer);
+                        }
+                    }
+                }
+                else{
+                    if(j == 0){
+                        create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, NULL);
+                    }
+                    else{
+                        if(j == m-1){
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, bakery_array[i+1][j].pointer, NULL, bakery_array[i][j-1].pointer);
+                        }
+                        else{
+
+                            create_link(bakery_array[i][j].pointer, bakery_array[i-1][j].pointer, bakery_array[i+1][j].pointer, bakery_array[i][j+1].pointer, bakery_array[i][j-1].pointer);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+        //take out zeros
+        for(int i = 0; i < g; i++){
+            bakery *temp = array_2[zeros[i]].pointer;
+            if (temp -> up != NULL){
+                    temp -> up -> down = temp -> down;
+                    temp -> up -> zd_down = temp -> up -> zd_down + temp -> zd_down + 1;
+                    temp -> up -> d_down = temp -> up -> zd_down;
+                    //printf("d_down of %d : %d\n",visited[t] -> up -> rank, visited[t] -> up -> d_down);
+                }
+                if (temp -> down != NULL){
+                    temp -> down -> up = temp -> up;
+                    temp -> down -> zd_up = temp -> down -> zd_up + temp -> zd_up + 1;
+                    temp -> down -> d_up = temp -> down -> zd_up;
+                    //printf("d_up of %d : %d\n",visited[t] -> down -> rank, visited[t] -> down -> d_up);
+                }
+                if (temp -> right != NULL){
+                    temp -> right -> left = temp -> left;
+                    temp -> right -> zd_left =  temp -> right -> zd_left + temp -> zd_left + 1;
+                    temp -> right -> d_left = temp -> right -> zd_left;
+                    //printf("d_left of %d : %d\n",visited[t] -> right -> rank, visited[t] -> right -> d_left);
+
+                }
+                if (temp -> left != NULL){
+                    temp -> left -> right = temp -> right;
+                    temp -> left -> zd_right = temp -> left -> zd_right + temp -> zd_right + 1;
+                    temp -> left -> d_right = temp -> left -> zd_right;
+                //printf("d_right of %d : %d\n",visited[t] -> left -> rank, visited[t] -> left -> d_right);
+                }
+        }
+
+
+
+    }
+
+
+
+
+    for (int i = 0; i < t_2 ; i++){  //second training period per day
+        scanf("%d%d%d", &r_2, &l_2, &s_2);
+        bakery *current = array_2[r_2].pointer;
+        bakery *next_bakery = NULL;
+       // printf("%p\n",current);
+        int count = 0;
+
+        visited[0] = current;
+
+        int k = 1;
+        int h = 0;
+        while (count < l_2){
+           // printf("start");
+            next_bakery = find_next(current);
+
+            //printf("next:%d\n",next_bakery -> rank);
+            if (next_bakery == NULL){
+                break;
+            }
+
+            bakery *temp;
+            temp = current;
+            current = next_bakery;
+            if (temp -> up != NULL){  //cut the one just visited (but not free)
+                temp -> up -> down = temp -> down;
+                temp -> up -> d_down = temp -> up -> d_down + temp -> d_down + 1;
+            }
+            if (temp -> down != NULL){
+                temp -> down -> up = temp -> up;
+                temp -> down -> d_up = temp -> down -> d_up + temp -> d_up + 1;
+            }
+            if (temp -> right != NULL){
+                temp -> right -> left = temp -> left;
+                temp -> right -> d_left = temp -> right -> d_left + temp -> d_left + 1;
+            }
+            if (temp -> left != NULL){
+                temp -> left -> right = temp -> right;
+                temp -> left -> d_right = temp -> left -> d_right + temp -> d_right + 1;
+            }
+
+            if (current->toast <= s_2){
+                current->toast = 0;
+
+                visited[k]= current;
+                k++;
+                }
+
+            else{
+              current->toast = current->toast - s_2;
+              visited[k]= current;
+              k++;
+
+            }
+            count++;
+        }
+
+
+        //put back the visited linked list without zero
+        for (int t = 0; t < k; t++){
+            //printf("visited : %d\n",visited[t]->rank);
+            if (visited[t] -> up != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> up -> down = visited[t] -> down;
+                    visited[t] -> up -> zd_down = visited[t] -> up -> zd_down + visited[t] -> zd_down + 1;
+                }
+                else{
+                    visited[t] -> up -> down = visited[t];
+                }
+                visited[t] -> up -> d_down = visited[t] -> up -> zd_down;
+               // printf("d_down of %d : %d\n",visited[t] -> up -> rank, visited[t] -> up -> d_down);
+            }
+            if (visited[t] -> down != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> down -> up = visited[t] -> up;
+                    visited[t] -> down -> zd_up = visited[t] -> down -> zd_up + visited[t] -> zd_up + 1;
+                }
+                else{
+                    visited[t] -> down -> up = visited[t];
+                }
+                visited[t] -> down -> d_up = visited[t] -> down -> zd_up;
+               // printf("d_up of %d : %d\n",visited[t] -> down -> rank, visited[t] -> down -> d_up);
+            }
+            if (visited[t] -> right != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> right -> left = visited[t] -> left;
+                    visited[t] -> right -> zd_left =  visited[t] -> right -> zd_left + visited[t] -> zd_left + 1;
+                }
+                else{
+                    visited[t] -> right -> left = visited[t];
+                }
+                visited[t] -> right -> d_left = visited[t] -> right -> zd_left;
+                //printf("d_left of %d : %d\n",visited[t] -> right -> rank, visited[t] -> right -> d_left);
+
+            }
+            if (visited[t] -> left != NULL){
+                if(visited[t] -> toast == 0){
+                    visited[t] -> left -> right = visited[t] -> right;
+                    visited[t] -> left -> zd_right = visited[t] -> left -> zd_right + visited[t] -> zd_right + 1;
+             }
+                else{
+                    visited[t] -> left -> right = visited[t];
+                }
+            visited[t] -> left -> d_right = visited[t] -> left -> zd_right;
+            //printf("d_right of %d : %d\n",visited[t] -> left -> rank, visited[t] -> left -> d_right);
+
+            }
+
+
+        }
+        for(int r = 0; r < k; r++){
+            visited[r] = NULL;
+        }
+
+
+
+
+    }
+
+
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+          //  printf("result\n");
+
+            //printf("%d\n",bakery_array[i][j].rank);
+
+            printf("%d ",bakery_array[i][j].pointer -> toast);
+        }
+        printf("\n");
+    }
+//    for (int i = 0; i < n; i++){
+//        for (int j = 0; j < m; j++){
+//          //  printf("result\n");
+//
+//            //printf("%d\n",bakery_array[i][j].rank);
+//
+//            printf("%d ",bakery_array[i][j].pointer -> rank);
+//        }
+//        printf("\n");
+//    }
+
+}
+
