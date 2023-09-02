@@ -1,0 +1,275 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<stdbool.h>
+#define max_N 1000001
+
+//typedef struct result
+//{
+//    long long final_cost;
+//    unsigned int number;
+//}result ;
+
+typedef struct listnode2
+{
+    long long cost;
+    int day;
+} heap_node;
+
+typedef struct listnode
+{
+    int id;
+    int *child_array_ptr;
+    int child_number;
+    int total_number;
+    long long total_cost;
+    int heap_size;
+    heap_node **heap_array_pointer;
+    struct listnode *child;
+    struct listnode *sibling;
+} company;
+
+//typedef struct listnode3
+//{
+//    int id;
+//    int x;
+//
+//} company2;
+
+//int compare(const void *a, const void *b) {
+//
+//    company2 *company2A = (company2 *)a;
+//    company2 *company2B = (company2 *)b;
+//
+//    return (company2A->x - company2B->x);
+//}
+
+company *genList(int id, company *child, company *sibling)
+{
+    company *node = (company *)malloc(sizeof(company));
+    assert(node != NULL);
+    node -> id = id;
+    node -> child_array_ptr = NULL;
+    node -> child_number = 0;
+    node -> total_cost = 0;
+    node -> heap_size = 0;
+    node -> heap_array_pointer = NULL;
+    node -> child = child;
+    node -> sibling = sibling;
+    return node;
+}
+
+heap_node *genNode(long long cost,int day)
+{
+    heap_node *node = (heap_node *)malloc(sizeof(heap_node));
+    assert(node != NULL);
+    node -> cost = cost;
+    node -> day = day;
+    return node;
+}
+
+int id_count(void){
+    static int i = 0;
+    i++;
+    return i;
+}
+
+void heapify(heap_node **heap_array_pointer, int cursor, int i){
+    int parent = (cursor - 1)/2;
+    if (parent >= 0 && parent != cursor){
+        if (heap_array_pointer[parent] -> cost > heap_array_pointer[cursor] -> cost){
+            heap_node *temp = heap_array_pointer[parent];
+            heap_array_pointer[parent] = heap_array_pointer[cursor];
+            heap_array_pointer[cursor] = temp;
+            heapify(heap_array_pointer, parent, i);
+    }
+    }
+
+}
+void insert_node(heap_node *temp2, heap_node **heap_array_pointer,int heap_size, int i){
+    //printf("here3\n");
+    int cursor = heap_size;
+    if (temp2 -> day <= heap_array_pointer[0] -> day && temp2 -> cost >= heap_array_pointer[0] -> cost){
+        temp2 -> cost = 1000000001;
+    }
+    heap_array_pointer[cursor] = temp2;
+    heapify(heap_array_pointer, cursor, i);
+
+}
+
+void heapify2(heap_node **ptr, int heap_size, int cursor){
+    int smallest = cursor;
+    int left, right;
+    heap_node *temp = NULL;
+    while(true){
+       // printf("doing2\n");
+        left = 2 * cursor + 1;
+        right = 2 * cursor + 2;
+        if(left > heap_size)
+            break;
+        if(left < heap_size && ptr[left] -> cost < ptr[cursor] -> cost){
+            smallest = left;
+            //printf("smallest is left %d\n", ptr[smallest]->cost);
+        }
+        if(right < heap_size && ptr[right] -> cost < ptr[smallest] -> cost){
+            smallest = right;
+           // printf("smallest is right %d\n", ptr[smallest]->cost);
+        }
+        if(smallest == cursor)
+            break;
+        else{
+            temp = ptr[cursor];
+            ptr[cursor] = ptr[smallest];
+            ptr[smallest] = temp;
+            cursor = smallest;
+          //  printf("doing3\n");
+        }
+
+    }
+
+}
+
+void find_max(company **arr, int id, long long C, int *arr_store_parent){
+    int parent;
+    if(arr[id] -> child_number == 0){
+        //printf("found leaf is %d\n",id);
+        parent = arr_store_parent[id];
+        if(parent!=0){
+            arr[parent] -> total_cost += arr[id] -> total_cost;
+            arr[parent] -> total_number += arr[id] -> total_number;
+        }
+
+    }
+    else{
+      int i = 0;
+      while(i < arr[id] -> child_number){
+           // printf("i is %d\n",i);
+            find_max(arr, arr[id] -> child_array_ptr[i], C, arr_store_parent);
+            i++;
+            if(i >= arr[id] -> child_number){
+                //printf("finding %d\n",id);
+                parent = arr_store_parent[id];
+                if(parent != 0){
+                    arr[parent] -> total_cost += arr[id] -> total_cost;
+                    arr[parent] -> total_number += arr[id] -> total_number;
+                   // printf("added non leaf is %d\n",id);
+                }
+
+                }
+            }
+
+
+
+        }
+    }
+
+
+
+
+signed main(){
+    int ans[max_N] = {0};
+    int N, M;
+    long long C;
+    int id = id_count();
+    company *arr[max_N];
+    int arr_count_child[max_N] = {0}; //how many child each company has
+    int arr_store_parent[max_N] = {0};//store parent index of each node
+    scanf("%d%d%lld",&N, &M, &C);
+    company *temp = NULL;
+    company * head = genList(id, NULL, NULL);
+    arr[1] = head;
+    //company2 arr2[max_N];
+    int parent;
+//    create tree O(N)
+    for (int i = 1; i < N; i++){
+        id = id_count();
+        company *new_node = genList(id, NULL, NULL);
+        arr[id] = new_node;
+  //      arr2[i].id = id;
+        scanf("%d", &parent);
+        arr_count_child[parent]++;
+        arr_store_parent[id] = parent;
+        //arr2[i].x = parent;
+    }
+    for (int i = 1; i <= N; i++){
+        if(arr_count_child[i] != 0){
+            arr[i]-> child_array_ptr = (int *)malloc(arr_count_child[i]*sizeof(int));
+        }
+    }
+    for (int i = 2; i <= N; i++){
+        arr[arr_store_parent[i]]->child_array_ptr[arr[arr_store_parent[i]]->child_number] = i;
+        arr[arr_store_parent[i]]-> child_number +=1;
+    }
+
+
+//    //finish creating tree
+    long long cost;
+    int day;
+//    result *Result = (result*)malloc(sizeof(result));
+    for(int i = 1; i <= M; i++){
+        for(int j = 1; j <= N; j++){
+            scanf("%lld", &cost);
+            scanf("%d", &day);
+
+            heap_node *temp2 = genNode(cost, day+i);
+            heap_node **ptr = arr[j] -> heap_array_pointer; //ptr is a heap_node pointer array's pointer
+            //build heap O(logm)
+            if(arr[j] -> heap_size == 0){
+                ptr = (heap_node **)malloc(M*sizeof(heap_node*));
+                arr[j] -> heap_array_pointer = ptr;
+                ptr[0] = temp2;
+            }
+            else{  //insert for min heap
+            //    printf("ptr is %p\n",ptr);
+                insert_node(temp2, ptr, arr[j] -> heap_size, i);
+
+            }
+            //change root if expire O(logm)
+            heap_node *temp3;
+            while(ptr[0] -> day < i){
+                temp3 = ptr[0];
+                ptr[0] = ptr[arr[j] -> heap_size];
+                ptr[arr[j] -> heap_size] = temp3;
+                ptr[arr[j] -> heap_size] -> cost = 1000000001;
+                heapify2(ptr, arr[j] -> heap_size, 0);
+            }
+            arr[j] -> heap_size +=1;
+
+           // printf("heap size : %d\n", arr[j] -> heap_size);
+
+
+        }
+        for(int k = 1; k <= N; k++){
+            arr[k] -> total_cost = arr[k] ->heap_array_pointer[0]->cost;
+            arr[k] -> total_number = arr[k] -> child_number;
+        }
+        find_max(arr, 1, C, arr_store_parent); //O(n)
+        int max_melon = 0;
+
+//        for(int k = 1; k <= N; k++){
+//            printf("number is %d\n",arr[k]-> child_number);
+//        }
+        for(int k = 1; k <= N; k++){
+            if(arr[k]-> total_cost <= C){
+                if(1 + arr[k] -> total_number  > max_melon){
+                    max_melon = 1 + arr[k] -> total_number;
+                    //printf("max is %d\n",k);
+                }
+            }
+        }
+        ans[i] = max_melon;
+        //printf("%d\n",max_melon);
+//        for(int k = 1; k <= N; k++){
+//////            printf("k is %d\n",arr[k]-> total_cost);
+//      }
+
+    }
+//    printf("cost is %lld\n",arr[5]->heap_array_pointer[0]->cost);
+//    printf("%d\n",arr[1] -> child -> sibling -> child -> sibling -> id);
+        for(int i = 1; i <= M; i++){
+        printf("%d\n",ans[i]);
+        }
+
+
+
+}
