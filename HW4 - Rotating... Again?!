@@ -1,0 +1,220 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<stdbool.h>
+#include<math.h>
+#include <string.h>
+#define stringlen 1000002
+//#define stringlen 100
+//#define max_array 150
+//#define prime1 103
+//#define prime2 107
+//#define prime3 109
+//#define prime4 101
+//#define prime5 113
+#define max_array 10030000
+//#define prime1 10013387
+//#define prime2 10013537
+//#define prime3 10013659
+//#define prime4 10013807
+//#define prime5 10013933
+long long total = 0;
+typedef struct listnode
+{
+    long long prime2_value;
+    long long count;
+    struct listnode *next;
+
+} node;
+
+node *genNode(long long value){
+    node *new_node = (node *)malloc(sizeof(node));
+    assert(new_node != NULL);
+    new_node -> prime2_value = value;
+    new_node -> count = 1;
+    new_node -> next = NULL;
+    return new_node;
+}
+
+void delete_str(char *S, long long prime1, long long prime2, long long d, node *all_pattern1, long long h1, long long h2, int M){
+    long long p = 0;
+    long long min = 0;
+    long long min2 = 0;
+    for(int i = 0; i < M; i++){              //normal
+        p = (d * p + (S[i] - 'a' + 1))% prime1;
+    }
+   // printf("p is %lld\n",p);
+    min = p;
+    for(int i = 1; i < M; i++){  //rotations
+        p = (d*(p - ((S[i-1] - 'a' + 1)*h1)) + (S[i-1] - 'a' + 1))% prime1;
+        if(p < 0){
+            p = p + prime1;
+        }
+        if (p < min) min = p;
+      //  printf("p is %lld\n",p);
+    }
+
+  //  printf("min is %d\n",min);
+    //second prime
+    p = 0;
+    for(int i = 0; i < M; i++){              //normal
+        p = (d * p + (S[i] - 'a' + 1))% prime2;
+    }
+    //printf("p is %lld\n",p);
+    min2 = p;
+    for(int i = 1; i < M; i++){  //rotations
+        p = (d*(p - ((S[i-1] - 'a' + 1)*h2)) + (S[i-1] - 'a' + 1))% prime2;
+        if(p < 0){
+            p = p + prime2;
+        }
+        if (p < min2) min2 = p;
+       // printf("p is %lld\n",p);
+    }
+    node *ptr = &all_pattern1[min];
+    //printf("min2 is %d\n",min2);
+    node *previous = NULL;
+    while(true){
+            if(ptr -> prime2_value == min2){ //found
+                //do the total
+             //   printf("deleting total\n");
+                total -= (ptr -> count - 1);
+                ptr -> count -= 1;
+                if(ptr -> count == 0){
+                    if(ptr != &all_pattern1[min]){
+                        previous -> next = ptr -> next;
+                        free(ptr);
+                    }
+                }
+                break;
+            }
+            else{
+                previous = ptr;
+                ptr = ptr -> next;
+                }
+            }
+
+}
+
+void rabin_karp(char *S, long long prime1, long long prime2, long long d, node *all_pattern1, long long h1, long long h2, int M){
+    long long p = 0;
+    long long min = 0;
+    long long min2 = 0;
+    for(int i = 0; i < M; i++){              //normal
+        p = (d * p + (S[i] - 'a' + 1))% prime1;
+    }
+    //printf("p is %lld\n",p);
+    min = p;
+    for(int i = 1; i < M; i++){  //rotations
+        p = (d*(p - ((S[i-1] - 'a' + 1)*h1)) + (S[i-1] - 'a' + 1))% prime1;
+        if(p < 0){
+            p = p + prime1;
+        }
+        if (p < min) min = p;
+     //   printf("p is %lld\n",p);
+    }
+
+   // printf("min is %d\n",min);
+    //second prime
+    p = 0;
+    for(int i = 0; i < M; i++){              //normal
+        p = (d * p + (S[i] - 'a' + 1))% prime2;
+    }
+   // printf("p is %lld\n",p);
+    min2 = p;
+    for(int i = 1; i < M; i++){  //rotations
+        p = (d*(p - ((S[i-1] - 'a' + 1)*h2)) + (S[i-1] - 'a' + 1))% prime2;
+        if(p < 0){
+            p = p + prime2;
+        }
+        if (p < min2) min2 = p;
+       // printf("p is %lld\n",p);
+    }
+
+    node *ptr = NULL;
+    //printf("min2 is %d\n",min2);
+    if(all_pattern1[min].prime2_value == 0 && all_pattern1[min].count == 0 && all_pattern1[min].next == NULL){ // there was nothing inside
+        all_pattern1[min].prime2_value = min2;
+        all_pattern1[min].count += 1;
+    }
+    else{
+        ptr = &all_pattern1[min];
+        while(true){
+            if(ptr -> prime2_value == min2){ //found same
+            //do the total
+         //   printf("adding total\n");
+            total += ptr -> count;
+            ptr -> count += 1;
+            break;
+            }
+            else{
+                if(ptr -> next == NULL){ //not found,add new
+                    ptr -> next = genNode(min2);
+                   // printf("here\n");
+                    break;
+                }
+                else{
+                    ptr = ptr -> next;
+                }
+            }
+        }
+    }
+
+
+}
+int main(){
+    int N, Q;
+    long long prime1 = 10013387;
+    long long prime2 =10013537;
+    //long long prime1 = 101;
+    //long long prime2 = 107;
+
+    long long d = 26;
+    long long h1 = 1;
+    long long h2 = 1;
+    long long min = 0;
+    node all_pattern1[max_array] = {0,0,NULL};
+    scanf("%d%d", &N, &Q);
+    char S[stringlen];
+    scanf("%s",S);
+    int M = strlen(S);
+   // printf("M is %d\n",M);
+    for(int i = 1; i < M; i++){
+        h1 = h1 * 26 % prime1;
+    }
+   // printf("%ld\n",h1);
+    for(int i = 1; i < M; i++){
+        h2 = h2 * 26 % prime2;
+    }
+
+    rabin_karp(S,prime1,prime2,d,all_pattern1,h1,h2,M);
+    for(int i = 0; i < N-1; i++){
+        scanf("%s",S);
+        rabin_karp(S,prime1,prime2,d,all_pattern1,h1,h2,M);
+         
+    }
+    printf("%lld\n",total);
+    int com;
+    for(int i = 0; i < Q; i++){
+        scanf("%d",&com);
+        scanf("%s",S);
+        if(com == 1){
+            rabin_karp(S,prime1,prime2,d,all_pattern1,h1,h2,M);
+        }
+        else{
+            delete_str(S,prime1,prime2,d,all_pattern1,h1,h2,M);
+        }
+        printf("%lld\n",total);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+}
