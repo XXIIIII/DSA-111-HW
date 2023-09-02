@@ -1,1 +1,170 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<stdbool.h>
+
+typedef struct listnode
+{
+    unsigned int player_id;
+    unsigned int player_power;
+    struct listnode *next;
+    struct listnode *prev;
+} Player;
+
+Player *get_tail(Player *node, char check)
+{
+    static Player *tail = NULL;
+    if (check == '1')
+    {
+        tail = node;
+        return NULL;
+
+    }
+    else
+    {
+        return tail;
+    }
+
+
+}
+
+unsigned int count_nodes2(char check)
+{
+    static unsigned int j = 0;
+    if (check == '1')
+    {
+        j++;
+        return 0;
+    }
+    else if(check == '2')
+    {
+        j--;
+        return 0;
+    }
+    else if(check == '3')
+    {
+        return j;
+    }
+
+}
+
+void bar(void)  // print number of rounds
+{
+    static int i = 0;
+    i++;
+    printf("Round %d: ",i);
+}
+
+Player *genList(unsigned int id, unsigned int power, Player* next, Player* prev)
+{
+    Player *node = (Player *)malloc(sizeof(Player));
+    assert(node != NULL);
+    node -> player_id = id;
+    node -> player_power = power;
+    node -> next = next;
+    node -> prev = prev;
+    return node;
+}
+
+Player *insert_sort_power(Player *head, Player *node, unsigned int count, unsigned int a)
+{
+    Player *ptr = head;
+    Player *last = NULL;
+    Player *dummy = NULL;
+    if (head == NULL)
+    {
+        dummy = get_tail(node,'1');
+        return (node);
+    }
+    while(ptr != NULL && a > ptr -> player_power)   //if greater,while continues
+    {
+        last = ptr;
+        ptr = ptr -> next;
+    }
+    if (last == NULL)  //is the smallest
+    {
+        node -> next = head;
+        head -> prev = node;
+        return (node);
+    }
+    else   //not the smallest
+    {
+        if (ptr != NULL)
+        {
+            last -> next -> prev = node;
+        }
+
+        node -> next = last -> next;
+        last -> next = node;
+        node -> prev = last;
+        if (ptr == NULL)
+        {
+            dummy = get_tail(node, '1'); //largest
+        }
+
+        return (head);
+
+    }
+}
+void printlinkedlist(Player *head, Player *node)
+{
+    for(; head != node ; head = head -> next)
+    {
+        printf("%u ",head -> player_id);
+    }
+}
+void remove_list(Player *head, Player *node)
+{
+    int i;
+    while(head != node)
+    {
+        Player *temp = head -> next;
+        free(head);
+        i = count_nodes2('2');
+        head = temp;
+    }
+
+}
+
+int main()
+{
+    unsigned int N, M, a, count = 1;
+    Player *head = NULL;
+    Player *tail = NULL;
+    int h = 0;
+
+    scanf("%u%u", &N, &M);
+    while(count != N + 1)
+    {
+        scanf("%u",&a);
+        bar();
+        Player *node = genList(count,a,NULL,NULL);
+        h = count_nodes2('1');
+        head = insert_sort_power(head, node, count, a);
+        printlinkedlist(head, node);
+        remove_list(head, node);
+        head = node;
+        node -> prev = NULL;
+        int k = count_nodes2('3');
+        if (k > M)
+        {
+            tail = get_tail(NULL,'2');
+            printf("%u",tail-> player_id);
+            tail-> prev -> next = NULL;
+            Player *dummy = get_tail(tail->prev, '1');
+            free(tail);
+            h = count_nodes2('2');
+        }
+
+
+
+        count++;
+        printf("\n");
+
+
+    }
+    printf("Final: ");
+    printlinkedlist(head, NULL);
+
+}
 
