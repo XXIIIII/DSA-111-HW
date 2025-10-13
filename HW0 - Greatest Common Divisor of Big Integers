@@ -11,7 +11,6 @@ void convert_to_array (char string[LENGTH],int array[LENGTH]){
         array[count] = (int)string[i] - 48;
         count++;
     }
-
 }
 
 int counter (int array[LENGTH]){
@@ -60,7 +59,6 @@ void divisor(int *a){
                 divided[i] = a[i] / 2;
                 a[i+1] += 10;
             }
-
         }
         else{
             a[i+1] += 10;
@@ -69,11 +67,6 @@ void divisor(int *a){
     }
     for (int i = 0; i < LENGTH; i++)
         a[i] = divided[i];
-
-
-
-
-
 }
 
 void subtractor(int a[],int b[]){   //max,min
@@ -87,7 +80,6 @@ void subtractor(int a[],int b[]){   //max,min
             count = 1;
             while (max[i - count] == 0){
                 count += 1;
-
             }
             max[i - count] -= 1;
             count -= 1;
@@ -100,7 +92,6 @@ void subtractor(int a[],int b[]){   //max,min
     }
     for (int i = 0; i < LENGTH; i++)
         max[i] = newmax[i];
-
 }
 
 void multiplier(int a[],int k){
@@ -114,12 +105,10 @@ void multiplier(int a[],int k){
                 ptr2[i] = 2 * ptr1[i];
                 if (add_one){
                     ptr2[i] += 1;
-
                     add_one = false;
                 }
                 if (ptr2[i] >= 10){
                     add_one = true;
-
                     ptr2[i] = ptr2[i] % 10;
                 }
             }
@@ -129,18 +118,12 @@ void multiplier(int a[],int k){
             for (int i = 0; i < LENGTH; i++){
                 ptr2[i] = 0;
             }
-
-
         }
 
         for(int i = 0; i < LENGTH; i++)
             a[i] = ptr1[i];
     }
-
 }
-
-
-
 
 int main(){
     int a[LENGTH]={0}, b[LENGTH]={0};
@@ -150,9 +133,6 @@ int main(){
     scanf("%s",string2);
     convert_to_array(string1,a);
     convert_to_array(string2,b);
-
-
-
     int *m = compare(a, b);
     if (m == NULL){
         printf("%s",string1);
@@ -169,45 +149,27 @@ int main(){
                     k++;
                     divisor(n);
                     divisor(m);
-
             }
             else{
                 if (n[LENGTH-1] % 2 == 0){
                     divisor(n);
-
                 }
                 else {
                     if (m[LENGTH-1] % 2 == 0){
                         divisor(m);
-
                     }
                 }
-
             }
-
-
             if (n == compare(m,n)){
                 int *temp = n;
                 n = m;
                 m = temp;
             }
             subtractor(m,n);
-
         }
-
         multiplier(n,k);
-
-
         int ans_length = counter(n);
         for (int i = LENGTH - ans_length; i < LENGTH; i++)
             printf("%d",n[i]);
-
-
     }
-
-
-
-
-
-
 }
