@@ -1,284 +1,152 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<assert.h>
-#include<stdbool.h>
-#include<math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdbool.h>
+#include <math.h>
 #include <string.h>
-#define stringlen 1000002
-//#define max_array 150
-//#define prime1 103
-//#define prime2 107
-//#define prime3 109
-//#define prime4 101
-//#define prime5 113
-#define max_array 10030000
-//#define prime1 10013387
-//#define prime2 10013537
-//#define prime3 10013659
-//#define prime4 10013807
-//#define prime5 10013933
 
-int find_number(char c){
-    if (c == 'A')
-        return 1;
-    if (c == 'B')
-        return 2;
-    if (c == 'C')
-        return 3;
-    if (c == 'D')
-        return 4;
-    if (c == 'E')
-        return 5;
-    if (c == 'F')
-        return 6;
-    if (c == 'G')
-        return 7;
-    if (c == 'H')
-        return 8;
-    if (c == 'I')
-        return 9;
-    if (c == 'J')
-        return 10;
-    if (c == 'K')
-        return 11;
-    if (c == 'L')
-        return 12;
-    if (c == 'M')
-        return 13;
-    if (c == 'N')
-        return 14;
-    if (c == 'O')
-        return 15;
-    if (c == 'P')
-        return 16;
-    if (c == 'Q')
-        return 17;
-    if (c == 'R')
-        return 18;
-    if (c == 'S')
-        return 19;
-    if (c == 'T')
-        return 20;
-    if (c == 'U')
-        return 21;
-    if (c == 'V')
-        return 22;
-    if (c == 'W')
-        return 23;
-    if (c == 'X')
-        return 24;
-    if (c == 'Y')
-        return 25;
-    if (c == 'Z')
-        return 26;
+#define STRING_MAX_LENGTH 1000002
+#define MAX_HASH_ARRAY_SIZE 10030000
 
-
+/**
+ * Converts uppercase letters A-Z to numbers 1-26
+ * Used for polynomial rolling hash calculation
+ */
+int find_number(char c) {
+    if (c >= 'A' && c <= 'Z') {
+        return c - 'A' + 1;
+    }
+    return 0; // Handle invalid input
 }
 
-void rabin_karp(long long d, long long h,char *P,int *all_pattern, int M, long long prime){
-    int p = 0;
-    for(int i = 0; i < M; i++){              //normal
-        p = (d * p + find_number(P[i]))% prime;
-//        pmod = p % prime;
-
+/**
+ * Rabin-Karp algorithm to compute hash values for pattern and all its rotations
+ * Stores hash values in all_pattern array for quick lookup
+ */
+void rabin_karp(long long base, long long highest_power, char *pattern, int *all_pattern, int pattern_length, long long prime) {
+    long long pattern_hash = 0;
+    
+    // Calculate hash for the original pattern
+    for (int i = 0; i < pattern_length; i++) {
+        pattern_hash = (base * pattern_hash + find_number(pattern[i])) % prime;
     }
- //   printf("p is %lld\n",p);
-    all_pattern[p] = 1;
-    for(int i = 1; i < M; i++){  //rotations
-        p = (d*(p - (find_number(P[i-1])*h)) + find_number(P[i-1]))% prime;
-        if(p < 0){
-            p = p + prime;
+    all_pattern[pattern_hash] = 1;
+    
+    // Calculate hashes for all rotations of the pattern
+    for (int i = 1; i < pattern_length; i++) {
+        // Rolling hash: remove first character and add it to the end
+        pattern_hash = (base * (pattern_hash - (find_number(pattern[i-1]) * highest_power)) + find_number(pattern[i-1])) % prime;
+        if (pattern_hash < 0) {
+            pattern_hash += prime;
         }
-  //      printf("p is %lld\n",p);
-//        pmod = p % prime;
-//        printf("pmod is %lld\n",pmod);
-        all_pattern[p] = 1;
+        all_pattern[pattern_hash] = 1;
     }
-
 }
-int main(){
-    int N, M;
+
+int main() {
+    int text_length, pattern_length;
+    
+    // Large prime numbers for multiple hash functions to reduce collisions
     long long prime1 = 10013387;
-    long long prime2 =10013537;
+    long long prime2 = 10013537;
     long long prime3 = 10013659;
     long long prime4 = 10013807;
-    long long prime5 = 10013933;
-//    long long prime1 = 10000019;
-//    long long prime2 = 10000079;
-//    long long prime3 = 10000103;
-//    long long prime4 = 10000121;
-//    long long prime5 = 10000139;
- //   int prime6 = 4701899;
-    int total = 0;
-    long long d = 26;
-//    long long d1 = 29;
-//    long long d2 = 31;
-//    long long d3 = 37;
-//    long long d4 = 41;
-//    long long d5 = 43;
-  //  int d6 = 47;
-    long long p = 0;
-    long long t1 = 0;
-    long long t2 = 0;
-    long long t3 = 0;
-    long long t4 = 0;
-    long long t5 = 0;
-    long long t6 = 0;
-//    long long h = 1;
-    long long h1 = 1;
-    long long h2 = 1;
-    long long h3 = 1;
-    long long h4 = 1;
-    long long h5 = 1;
- //   long long h6 = 47;
-    char S[stringlen];
-    char P[stringlen];
-    scanf("%d%d", &N, &M);
-    for(int i = 1; i < M; i++){
-        h1 = h1 * 26 % prime1;
+    
+    int match_count = 0;
+    long long base = 26; // Base for polynomial rolling hash (26 letters)
+    
+    // Hash values for current window in text
+    long long text_hash1 = 0, text_hash2 = 0, text_hash3 = 0, text_hash4 = 0;
+    
+    // Precomputed powers for rolling hash
+    long long highest_power1 = 1, highest_power2 = 1, highest_power3 = 1, highest_power4 = 1;
+    
+    char text[STRING_MAX_LENGTH];
+    char pattern[STRING_MAX_LENGTH];
+    
+    scanf("%d%d", &text_length, &pattern_length);
+    
+    // Precompute base^(pattern_length-1) mod prime for each hash function
+    for (int i = 1; i < pattern_length; i++) {
+        highest_power1 = (highest_power1 * base) % prime1;
     }
-   // printf("%ld\n",h1);
-    for(int i = 1; i < M; i++){
-        h2 = h2 * 26 % prime2;
+    for (int i = 1; i < pattern_length; i++) {
+        highest_power2 = (highest_power2 * base) % prime2;
     }
- //   printf("%ld\n",h2);
-    for(int i = 1; i < M; i++){
-        h3 = h3 * 26 % prime3;
+    for (int i = 1; i < pattern_length; i++) {
+        highest_power3 = (highest_power3 * base) % prime3;
     }
- //   printf("%ld\n",h3);
-    for(int i = 1; i < M; i++){
-        h4 = h4 * 26 % prime4;
+    for (int i = 1; i < pattern_length; i++) {
+        highest_power4 = (highest_power4 * base) % prime4;
     }
-  //  printf("%ld\n",h4);
-    //for(int i = 1; i < M; i++){
- //       h5 = h5 * 26 % prime5;
-  //  }
-
-   // printf("h is %lld\n",h);
-    int all_pattern1[max_array] = {0};
-    int all_pattern2[max_array] = {0};
-    int all_pattern3[max_array] = {0};
-    int all_pattern4[max_array] = {0};
-   // int all_pattern5[max_array] = {0};
- //   int all_pattern6[max_array] = {0};
-    scanf("%s",S);
-    scanf("%s",P);
-//    printf("first\n");
-    rabin_karp(d, h1, P, all_pattern1, M, prime1);
-//    for(int i = 0; i < max_array; i++){
-//        printf("all_pattern1 %d is %d\n",i, all_pattern1[i]);
-//
-//    }
-//    printf("second\n");
-    rabin_karp(d, h2, P, all_pattern2, M, prime2);
-//    for(int i = 0; i < max_array; i++){
-//        printf("all_pattern2 %d is %d\n",i, all_pattern2[i]);
-//
-//    }
-//    printf("third\n");
-    rabin_karp(d, h3, P, all_pattern3, M, prime3);
-//    for(int i = 0; i < max_array; i++){
-//        printf("all_pattern3 %d is %d\n",i, all_pattern3[i]);
-//
-//    }
-  //  printf("fourth\n");
-    rabin_karp(d, h4, P, all_pattern4, M, prime4);
-//    for(int i = 0; i < max_array; i++){
-//        printf("all_pattern4 %d is %d\n",i, all_pattern4[i]);
-//
-//    }
- //   printf("fifth\n");
-  //  rabin_karp(d, h5, P, all_pattern5, M, prime5);
-//    for(int i = 0; i < max_array; i++){
-//        printf("all_pattern5 %d is %d\n",i, all_pattern5[i]);
-//
-//    }
- //   rabin_karp(d6, h6, P, all_pattern6, M, prime6);
-//    // string
-    for(int i = 0; i < M; i++){
-        t1 = (d * t1 + find_number(S[i])) % prime1;
-//        tmod1 = t1 % prime1;
+    
+    // Hash tables to store all pattern rotation hashes
+    int pattern_hashes1[MAX_HASH_ARRAY_SIZE] = {0};
+    int pattern_hashes2[MAX_HASH_ARRAY_SIZE] = {0};
+    int pattern_hashes3[MAX_HASH_ARRAY_SIZE] = {0};
+    int pattern_hashes4[MAX_HASH_ARRAY_SIZE] = {0};
+    
+    scanf("%s", text);
+    scanf("%s", pattern);
+    
+    // Generate hash values for pattern and all its rotations using 4 different hash functions
+    rabin_karp(base, highest_power1, pattern, pattern_hashes1, pattern_length, prime1);
+    rabin_karp(base, highest_power2, pattern, pattern_hashes2, pattern_length, prime2);
+    rabin_karp(base, highest_power3, pattern, pattern_hashes3, pattern_length, prime3);
+    rabin_karp(base, highest_power4, pattern, pattern_hashes4, pattern_length, prime4);
+    
+    // Calculate initial hash values for first window in text
+    for (int i = 0; i < pattern_length; i++) {
+        text_hash1 = (base * text_hash1 + find_number(text[i])) % prime1;
     }
- //   printf("t1 is %d\n",t1);
-    for(int i = 0; i < M; i++){
-        t2 = (d * t2 + find_number(S[i]))% prime2 ;
-//        tmod2 = t2 % prime2;
+    for (int i = 0; i < pattern_length; i++) {
+        text_hash2 = (base * text_hash2 + find_number(text[i])) % prime2;
     }
-////    printf("tmod2 is %d\n",tmod2);
-    for(int i = 0; i < M; i++){
-        t3 = (d * t3 + find_number(S[i]))% prime3 ;
-//        tmod3 = t3 % prime3;
+    for (int i = 0; i < pattern_length; i++) {
+        text_hash3 = (base * text_hash3 + find_number(text[i])) % prime3;
     }
-////    printf("tmod3 is %d\n",tmod3);
-    for(int i = 0; i < M; i++){
-        t4 = (d * t4 + find_number(S[i]))% prime4 ;
-//        tmod4 = t4 % prime4;
+    for (int i = 0; i < pattern_length; i++) {
+        text_hash4 = (base * text_hash4 + find_number(text[i])) % prime4;
     }
-////    printf("tmod4 is %d\n",tmod4);
-   // for(int i = 0; i < M; i++){
-   //     t5 = (d * t5 + find_number(S[i]))% prime5 ;
-//        tmod5 = t5 % prime5;
-  //  }
-//    printf("tmod5 is %d\n",tmod5);
- //   for(int i = 0; i < M; i++){
- //           t6 = (d6 * t6 + find_number(S[i]))% prime6 ;
-    //        tmod5 = t5 % prime5;
-  //      }
-
-    for (int i = 0; i <= N - M; i++){
-        if (all_pattern1[t1]== 1 && all_pattern2[t2]== 1 && all_pattern3[t3]== 1 && all_pattern4[t4]== 1 ){
+    
+    // Slide window across text and check for matches
+    for (int i = 0; i <= text_length - pattern_length; i++) {
+        // Check if current window matches any rotation using all 4 hash functions
+        if (pattern_hashes1[text_hash1] == 1 && 
+            pattern_hashes2[text_hash2] == 1 && 
+            pattern_hashes3[text_hash3] == 1 && 
+            pattern_hashes4[text_hash4] == 1) {
+            match_count++;
+        }
+        
+        // Roll the window to next position (if not at end)
+        if (i < text_length - pattern_length) {
+            // Update hash1: remove leftmost character, add new rightmost character
+            text_hash1 = (base * (text_hash1 - find_number(text[i]) * highest_power1) + find_number(text[i + pattern_length])) % prime1;
+            if (text_hash1 < 0) {
+                text_hash1 += prime1;
+            }
             
-            total++;
-            //printf("same\n");
-        }
-        if(i < N - M){
-            t1 = (d * (t1 - find_number(S[i])*h1) + find_number(S[i + M]))% prime1;
-           // printf("t1 is %d\n",t1);
-            if(t1 < 0){
-                t1 = t1 + prime1;;
+            // Update hash2
+            text_hash2 = (base * (text_hash2 - find_number(text[i]) * highest_power2) + find_number(text[i + pattern_length])) % prime2;
+            if (text_hash2 < 0) {
+                text_hash2 += prime2;
             }
-
-          //  printf("t1 is %d\n",t1);
-
-
-            t2 = (d * (t2 - find_number(S[i])*h2) + find_number(S[i + M]))% prime2;
-            if(t2 < 0){
-                t2 = t2 + prime2;
+            
+            // Update hash3
+            text_hash3 = (base * (text_hash3 - find_number(text[i]) * highest_power3) + find_number(text[i + pattern_length])) % prime3;
+            if (text_hash3 < 0) {
+                text_hash3 += prime3;
             }
-
-
-      //      printf("t2 is %d\n",t2);
-            t3 = (d * (t3 - find_number(S[i])*h3) + find_number(S[i + M])) % prime3;
-            if(t3 < 0){
-                t3 = t3 + prime3;
+            
+            // Update hash4
+            text_hash4 = (base * (text_hash4 - find_number(text[i]) * highest_power4) + find_number(text[i + pattern_length])) % prime4;
+            if (text_hash4 < 0) {
+                text_hash4 += prime4;
             }
-
-
-       //     printf("t3 is %d\n",t3);
-            t4 = (d * (t4 - find_number(S[i])*h4) + find_number(S[i + M]))% prime4;
-            if(t4 < 0){
-                t4 = t4 + prime4;
-            }
-
-
-       //     printf("t4 is %d\n",t4);
-          //  t5 = (d * (t5 - find_number(S[i])*h5) + find_number(S[i + M]))% prime5;
-         //   if(t5 < 0){
-           //     t5 = t5 + prime5;
-           // }
-
-
-        //    printf("t5 is %d\n",t5);
-     //      t6 = (d6 * (t6 - find_number(S[i])*h6) + find_number(S[i + M]))% prime6;
-    //        if(t6 < 0){
-    //            t6 = t6 + prime6;
-      //      }
-
         }
     }
-    printf("%d\n",total);
-
-
-
-
+    
+    printf("%d\n", match_count);
+    return 0;
 }
